@@ -1,0 +1,5 @@
+streamlit
+pandas
+bcrypt
+sqlite3
+# streamlit_gsheets

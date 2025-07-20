@@ -1,5 +1,6 @@
 streamlit
 pandas
 bcrypt
+plotly
 # sqlite3
 # streamlit_gsheets

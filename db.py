@@ -145,8 +145,22 @@ sender_email = st.secrets["secrets"]["address"]
 app_password = st.secrets["secrets"]["app_password"]
 
 def send_email(receiver_email, fta_name):
-    subject = "Welcome to the FTA Team"
-    body = f"Dear {fta_name},\n\nThank you for joining the team!"
+    subject = "Welcome to The Standpoint Church – We're Glad You Came!"
+    body = f"""Dear {fta_name},
+
+    We’re truly honored that you chose to worship with us at The Standpoint Church. On behalf of our Senior Pastor, Dr. Phil Ransom-Bello, and the entire Standpoint family, we want to say a big THANK YOU for fellowshipping with us!
+    
+    We believe that your presence is not by chance but part of God’s divine orchestration—and we are excited about all that God is set to do in your life from here.
+    
+    Whether this was your first time or you’ve visited before, we want you to know that you're seen, valued, and loved. Our prayer is that you find purpose, truth, and transformation as you continue to encounter God's Word in this house.
+    
+    We look forward to seeing you again, growing together, and walking this journey of faith alongside you.
+    
+    With love and honor,  
+    **The A-Team**  
+    *For Dr. Phil Ransom-Bello*  
+    *Lead Pastor, The Standpoint Church*
+    """
 
     message = MIMEText(body)
     message["Subject"] = subject

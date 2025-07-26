@@ -4,6 +4,10 @@ import bcrypt
 from datetime import datetime
 import pandas as pd
 from email_utils import send_email_to_fta
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
 
 DB_PATH = "fta.db"
 

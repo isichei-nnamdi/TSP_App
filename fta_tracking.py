@@ -27,7 +27,7 @@ def show_feedback_tracking_page(go_to):
 
         # --- Select Call Type ---
         call_type = st.selectbox("Type of Call", [
-            "1st call", "2nd call", "3rd call", "M&G Confirmation", "After Effect Confirmation"
+            "1st call", "2nd call", "3rd call", "M&G Attended", "After Effect Confirmation"
         ])
 
         # --- Filter FTAs: exclude those with feedback for this call_type ---
@@ -71,9 +71,9 @@ def show_feedback_tracking_page(go_to):
         elif call_type == "3rd call":
             general_feedback = st.text_area("General Feedback on 3rd call")
 
-        elif call_type == "M&G Confirmation":
+        elif call_type == "M&G Attended":
             mg_date = st.date_input("Date for M&G")
-            general_feedback = st.text_area("General Feedback on M&G Confirmation")
+            general_feedback = st.text_area("General Feedback on M&G Attended")
 
         elif call_type == "After Effect Confirmation":
             department = st.selectbox("Department handed over to", [

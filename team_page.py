@@ -90,7 +90,7 @@ def show_team_page(go_to):
         # Ensure assigned_at column is datetime
         assignments_df["assigned_at"] = pd.to_datetime(assignments_df["assigned_at"], errors="coerce")
         min_date = assignments_df["assigned_at"].min().date() if not assignments_df["assigned_at"].isna().all() else datetime.today().date()
-        max_date = all_feedback["submitted_at"].max().date() if not all_feedback["submitted_at"].isna().all() else datetime.today().date()
+        max_date = datetime.today().date() # all_feedback["submitted_at"].max().date() if not all_feedback["submitted_at"].isna().all() else
         start_date = st.date_input("Start Date",
                                 value=min_date,
                                 min_value=min_date,

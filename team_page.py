@@ -259,7 +259,7 @@ def show_team_page(go_to):
         st.write("")
     with col2:
         min_date = all_feedback["submitted_at"].min().date() if not all_feedback["submitted_at"].isna().all() else datetime.today().date()
-        max_date = all_feedback["submitted_at"].max().date() if not all_feedback["submitted_at"].isna().all() else datetime.today().date()
+        max_date = datetime.today().date() # all_feedback["submitted_at"].max().date() if not all_feedback["submitted_at"].isna().all() else
         start_date = st.date_input("Start Date",
                                 value=min_date,
                                 min_value=min_date,

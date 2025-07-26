@@ -572,7 +572,8 @@ def show_team_page(go_to):
     
             st.markdown(card_style, unsafe_allow_html=True)
             st.markdown(card_html, unsafe_allow_html=True)
-    
+            st.write("")
+            st.write("")
             st.dataframe(filtered_df.sort_values("timestamp", ascending=False), use_container_width=True)
     
             if st.button("🚨 Reset Email Logs"):

@@ -209,18 +209,42 @@ def sync_and_assign_fta_responses(gsheet_url):
         print(f"[Sync Error] Failed to fetch sheet: {e}")
         return pd.DataFrame()
 
+    # # Email sending and logging logic
+    # for _, row in df.iterrows():
+    #     fta_id = row.get("FTA ID")
+    #     name = row.get("Full Name", "FTA")
+    #     email = row.get("Email address")
+
+    #     if email and not email_already_sent(fta_id):
+    #         sent, subject = send_email(email, name)
+    #         if sent:
+    #             log_email_sent(fta_id, email, name, subject, "sent")
+    #         else:
+    #             log_email_sent(fta_id, email, name, subject, "failed", "Send error")
+
     # Email sending and logging logic
     for _, row in df.iterrows():
         fta_id = row.get("FTA ID")
         name = row.get("Full Name", "FTA")
         email = row.get("Email address")
-
-        if email and not email_already_sent(fta_id):
-            sent, subject = send_email(email, name)
-            if sent:
-                log_email_sent(fta_id, email, name, subject, "sent")
-            else:
-                log_email_sent(fta_id, email, name, subject, "failed", "Send error")
+    
+        if not fta_id:
+            print(f"[Skip] Missing FTA ID for row: {row}")
+            continue
+    
+        if not email:
+            print(f"[Skip] Missing email for FTA ID {fta_id}")
+            continue
+    
+        if email_already_sent(fta_id):
+            print(f"[Skip] Email already sent to FTA ID {fta_id}")
+            continue
+    
+        sent, subject = send_email(email, name)
+        if sent:
+            log_email_sent(fta_id, email, name, subject, "sent")
+        else:
+            log_email_sent(fta_id, email, name, subject, "failed", "Send error")
 
     # Store in main table
     with sqlite3.connect(DB_PATH) as conn:

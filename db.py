@@ -12,6 +12,21 @@ from email.mime.multipart import MIMEMultipart
 DB_PATH = "fta.db"
 
 # ======================= USER MANAGEMENT =======================
+# --- Function to get logs ---
+def get_email_logs():
+    with sqlite3.connect(DB_PATH) as conn:
+        df = pd.read_sql_query('''
+            SELECT fta_id, fta_name, email, subject, status, error_message, timestamp
+            FROM email_logs
+            ORDER BY timestamp DESC
+        ''', conn)
+    return df
+
+# --- Function to clear logs ---
+def clear_email_logs():
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("DELETE FROM email_logs")
+        conn.commit()
 
 def create_users_table():
     with sqlite3.connect(DB_PATH, timeout=10) as conn:

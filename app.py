@@ -14,6 +14,27 @@ from db import (
 )
 # st.set_page_config(page_title="FTA Login", layout="wide", initial_sidebar_state="collapsed")
 st.set_page_config(page_title="FTA Management", layout="wide")
+from db import DB_PATH
+
+print("Checking email_logs table in:", DB_PATH)
+with sqlite3.connect(DB_PATH) as conn:
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS email_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fta_id TEXT,
+            timestamp TEXT,
+            fta_name TEXT,
+            email TEXT,
+            subject TEXT,
+            status TEXT,
+            error_message TEXT
+        )
+    """)
+    conn.commit()
+    print("✅ email_logs table created or confirmed.")
+
+
 
 # === CONFIG ===
 GSHEET_URL = st.secrets["secrets"]["gsheet_url"]

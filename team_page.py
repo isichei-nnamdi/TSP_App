@@ -20,7 +20,7 @@ def show_team_page(go_to):
 
     st.markdown("### 👥 A-Team Management")
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     with col1:
         st.write(" ")
         st.write(" ")
@@ -66,10 +66,10 @@ def show_team_page(go_to):
             lambda row: search in row["email"].lower() or search in row["full_name"].lower(), axis=1
         )] if search else members_df
 
-    with col3:
-        if st.button("Reset Database"):
-            reset_database()
-            st.success("✅ Database has been reset successfully.")
+    # with col3:
+    #     if st.button("Reset Database"):
+    #         reset_database()
+    #         st.success("✅ Database has been reset successfully.")
 
     # --- Load members and assignments ---
     with sqlite3.connect(DB_PATH) as conn:

@@ -188,7 +188,7 @@ def show_dashboard_page(go_to):
         all_feedback["submitted_at"] = pd.to_datetime(all_feedback["submitted_at"], errors="coerce")
 
     min_date = fta_raw_df[timestamp_col].min().date() if timestamp_col else dt.date.today()
-    max_date = all_feedback["submitted_at"].max().date() if not all_feedback["submitted_at"].isna().all() else dt.date.today()
+    max_date = dt.date.today() #all_feedback["submitted_at"].max().date() if not all_feedback["submitted_at"].isna().all() else
 
 
     with col_start:

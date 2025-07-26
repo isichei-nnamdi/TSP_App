@@ -227,7 +227,7 @@ def show_team_page(go_to):
     # if not all_feedback.empty:
     #     all_feedback["submitted_at"] = pd.to_datetime(all_feedback["submitted_at"], errors="coerce")
     #     all_feedback["Feedback_id"] = all_feedback["fta_id"] + " - " + all_feedback["call_type"]
-     st.write(summary_df)
+     # st.write(summary_df)
 
     col1, col2, col3, col4 = st.columns([2, 1, 1, 1.5])
     with col1:

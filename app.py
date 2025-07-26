@@ -34,6 +34,7 @@ with sqlite3.connect(DB_PATH) as conn:
     """)
     conn.commit()
     print("✅ email_logs table created or confirmed.")
+    print("Using DB path:", DB_PATH)
 
 
 

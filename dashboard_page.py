@@ -4,11 +4,11 @@ import plotly.express as px
 import plotly.graph_objects as go
 import datetime as dt
 import sqlite3
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from datetime import datetime
-import gspread
+# import smtplib
+# from email.mime.text import MIMEText
+# from email.mime.multipart import MIMEMultipart
+# from datetime import datetime
+# import gspread
 
 
 
@@ -44,78 +44,77 @@ import gspread
 #     except Exception as e:
 #         print(f"Failed to send email to {receiver_email}: {e}")
 
-# === CONFIG ===
-GSHEET_URL = st.secrets["secrets"]["gsheet_url"]
-SENDER_EMAIL = st.secrets["secrets"]["address"]
-APP_PASSWORD = st.secrets["secrets"]["app_password"]
+# # === CONFIG ===
+# GSHEET_URL = st.secrets["secrets"]["gsheet_url"]
+# SENDER_EMAIL = st.secrets["secrets"]["address"]
+# APP_PASSWORD = st.secrets["secrets"]["app_password"]
 
-# === Connect to Google Sheet ===
-@st.cache_resource
-def get_gspread_client():
-    scopes = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive",
-    ]
-    return gspread.service_account_from_dict(st.secrets["google_service_account"], scopes=scopes)
+# # === Connect to Google Sheet ===
+# @st.cache_resource
+# def get_gspread_client():
+#     scopes = [
+#         "https://www.googleapis.com/auth/spreadsheets",
+#         "https://www.googleapis.com/auth/drive",
+#     ]
+#     return gspread.service_account_from_dict(st.secrets["google_service_account"], scopes=scopes)
 
-gc = get_gspread_client()
-spreadsheet = gc.open_by_url(GSHEET_URL)
+# gc = get_gspread_client()
+# spreadsheet = gc.open_by_url(GSHEET_URL)
 
-# Get or create the 'email_logs' worksheet
-def get_or_create_log_sheet():
-    try:
-        return spreadsheet.worksheet("email_logs")
-    except gspread.exceptions.WorksheetNotFound:
-        return spreadsheet.add_worksheet(title="email_logs", rows="1000", cols="10")
+# # Get or create the 'email_logs' worksheet
+# def get_or_create_log_sheet():
+#     try:
+#         return spreadsheet.worksheet("email_logs")
+#     except gspread.exceptions.WorksheetNotFound:
+#         return spreadsheet.add_worksheet(title="email_logs", rows="1000", cols="10")
 
-log_sheet = get_or_create_log_sheet()
+# log_sheet = get_or_create_log_sheet()
 
-# Ensure headers exist
-if not log_sheet.get_all_values():
-    log_sheet.append_row([
-        "Timestamp", "FTA Name", "Email Address", "Subject", "Sender Email", "Status", "Error Message"
-    ])
+# # Ensure headers exist
+# if not log_sheet.get_all_values():
+#     log_sheet.append_row([
+#         "Timestamp", "FTA Name", "Email Address", "Subject", "Sender Email", "Status", "Error Message"
+#     ])
 
-# === Log email activity ===
-def log_email_to_sheet(name, receiver_email, subject, sender_email, status, error_msg=None):
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    row = [
-        now,
-        name,
-        receiver_email,
-        subject,
-        sender_email,
-        status,
-        error_msg or ""
-    ]
-    log_sheet.append_row(row, value_input_option="USER_ENTERED")
+# # === Log email activity ===
+# def log_email_to_sheet(name, receiver_email, subject, sender_email, status, error_msg=None):
+#     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#     row = [
+#         now,
+#         name,
+#         receiver_email,
+#         subject,
+#         sender_email,
+#         status,
+#         error_msg or ""
+#     ]
+#     log_sheet.append_row(row, value_input_option="USER_ENTERED")
 
-# === Email sending function ===
-def send_email_to_fta(receiver_email, fta_name):
-    subject = f"Thank you for submitting your FTA Form"
+# # === Email sending function ===
+# def send_email_to_fta(receiver_email, fta_name):
+#     subject = f"Thank you for submitting your FTA Form"
 
-    message = MIMEText(f"""
-    Dear {fta_name},
+#     message = MIMEText(f"""
+#     Dear {fta_name},
 
-    Thank you for completing the FTA form. We have received your submission.
+#     Thank you for completing the FTA form. We have received your submission.
 
-    Best regards,
-    TSP A-Team
-    """)
-    message['From'] = SENDER_EMAIL
-    message['To'] = receiver_email
-    message['Subject'] = subject
+#     Best regards,
+#     TSP A-Team
+#     """)
+#     message['From'] = SENDER_EMAIL
+#     message['To'] = receiver_email
+#     message['Subject'] = subject
 
-    try:
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.starttls()
-        server.login(SENDER_EMAIL, APP_PASSWORD)
-        server.sendmail(SENDER_EMAIL, receiver_email, message.as_string())
-        server.quit()
-        log_email_to_sheet(fta_name, receiver_email, subject, SENDER_EMAIL, "Success")
-    except Exception as e:
-        log_email_to_sheet(fta_name, receiver_email, subject, SENDER_EMAIL, "Failed", str(e))
-        
+#     try:
+#         server = smtplib.SMTP("smtp.gmail.com", 587)
+#         server.starttls()
+#         server.login(SENDER_EMAIL, APP_PASSWORD)
+#         server.sendmail(SENDER_EMAIL, receiver_email, message.as_string())
+#         server.quit()
+#         log_email_to_sheet(fta_name, receiver_email, subject, SENDER_EMAIL, "Success")
+#     except Exception as e:
+#         log_email_to_sheet(fta_name, receiver_email, subject, SENDER_EMAIL, "Failed", str(e))
 
 
 # Utility function to safely get the first existing column

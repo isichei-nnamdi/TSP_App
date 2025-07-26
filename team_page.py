@@ -159,7 +159,7 @@ def show_team_page(go_to):
     total_contacted = summary_df["Contacted"].sum()
     total_not_contacted = summary_df["Not Contacted"].sum()
 
-    st.write(summary_df)
+    # st.write(summary_df)
     # if not summary_df.empty and "Total Assigned" in summary_df.columns:
     #     total_assigned = summary_df["Total Assigned"].sum()
     #     total_contacted = summary_df["Contacted"].sum()
@@ -488,3 +488,68 @@ def show_team_page(go_to):
                     st.rerun()
                 else:
                     st.warning("Please select at least one FTA to reassign.")
+    # --- Function to get logs ---
+    def get_email_logs(db_path="fta.db"):
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT member_email, recipient_email, subject, status, timestamp FROM email_logs ORDER BY timestamp DESC")
+        logs = cursor.fetchall()
+        conn.close()
+        columns = ["A-Team Member", "Recipient", "Subject", "Status", "Timestamp"]
+        return pd.DataFrame(logs, columns=columns)
+    
+    # --- Function to clear logs ---
+    def clear_email_logs(db_path="fta.db"):
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM email_logs")
+        conn.commit()
+        conn.close()
+    
+    # --- Admin Dashboard Section ---
+    st.subheader("📧 Email Logs Dashboard")
+    
+    # Load logs
+    logs_df = get_email_logs()
+    
+    if logs_df.empty:
+        st.info("No email logs found.")
+    else:
+        # Convert timestamp column to datetime
+        logs_df["Timestamp"] = pd.to_datetime(logs_df["Timestamp"])
+    
+        # Sidebar Filters
+        with st.expander("🔍 Filter Logs"):
+            member_filter = st.multiselect("Filter by A-Team Member", options=logs_df["A-Team Member"].unique())
+            status_filter = st.multiselect("Filter by Status", options=logs_df["Status"].unique())
+            date_range = st.date_input("Filter by Date Range", [])
+    
+        # Apply Filters
+        filtered_df = logs_df.copy()
+    
+        if member_filter:
+            filtered_df = filtered_df[filtered_df["A-Team Member"].isin(member_filter)]
+    
+        if status_filter:
+            filtered_df = filtered_df[filtered_df["Status"].isin(status_filter)]
+    
+        if len(date_range) == 2:
+            start_date = pd.to_datetime(date_range[0])
+            end_date = pd.to_datetime(date_range[1]) + pd.Timedelta(days=1)
+            filtered_df = filtered_df[(filtered_df["Timestamp"] >= start_date) & (filtered_df["Timestamp"] < end_date)]
+    
+        # Show Summary Metrics
+        st.metric("Total Emails Sent", len(filtered_df))
+        st.metric("Success", (filtered_df["Status"] == "Success").sum())
+        st.metric("Failed", (filtered_df["Status"] == "Failed").sum())
+    
+        # Show Table
+        st.dataframe(filtered_df.sort_values("Timestamp", ascending=False), use_container_width=True)
+    
+        # Optionally add reset button
+        if st.button("🚨 Reset Email Logs"):
+            confirm = st.warning("Are you sure? This will delete all logs.")
+            if st.button("Yes, delete logs"):
+                clear_email_logs()
+                st.success("Email logs cleared.")
+                st.experimental_rerun()

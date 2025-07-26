@@ -4,7 +4,7 @@ import sqlite3
 import plotly.graph_objects as go
 from datetime import datetime
 from db import get_all_a_team_members, add_a_team_member
-from reset_database import reset_database
+from reset_db import reset_database
 
 # ---------------------------------------------------------------------
 #  TEAM PAGE  ── Filters: Date range  +  A‑Team member  +  Reset button

@@ -3,7 +3,7 @@ import pandas as pd
 import sqlite3
 import plotly.graph_objects as go
 from datetime import datetime
-from db import get_all_a_team_members, add_a_team_member
+from db import get_all_a_team_members, add_a_team_member, get_email_logs, clear_email_logs
 from reset_db import reset_database
 
 # ---------------------------------------------------------------------
@@ -488,68 +488,42 @@ def show_team_page(go_to):
                     st.rerun()
                 else:
                     st.warning("Please select at least one FTA to reassign.")
-    # --- Function to get logs ---
-    def get_email_logs(db_path="fta.db"):
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT member_email, recipient_email, subject, status, timestamp FROM email_logs ORDER BY timestamp DESC")
-        logs = cursor.fetchall()
-        conn.close()
-        columns = ["A-Team Member", "Recipient", "Subject", "Status", "Timestamp"]
-        return pd.DataFrame(logs, columns=columns)
-    
-    # --- Function to clear logs ---
-    def clear_email_logs(db_path="fta.db"):
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM email_logs")
-        conn.commit()
-        conn.close()
     
     # --- Admin Dashboard Section ---
-    st.subheader("📧 Email Logs Dashboard")
-    
-    # Load logs
-    logs_df = get_email_logs()
-    
-    if logs_df.empty:
-        st.info("No email logs found.")
-    else:
-        # Convert timestamp column to datetime
-        logs_df["Timestamp"] = pd.to_datetime(logs_df["Timestamp"])
-    
-        # Sidebar Filters
-        with st.expander("🔍 Filter Logs"):
-            member_filter = st.multiselect("Filter by A-Team Member", options=logs_df["A-Team Member"].unique())
-            status_filter = st.multiselect("Filter by Status", options=logs_df["Status"].unique())
-            date_range = st.date_input("Filter by Date Range", [])
-    
-        # Apply Filters
-        filtered_df = logs_df.copy()
-    
-        if member_filter:
-            filtered_df = filtered_df[filtered_df["A-Team Member"].isin(member_filter)]
-    
-        if status_filter:
-            filtered_df = filtered_df[filtered_df["Status"].isin(status_filter)]
-    
-        if len(date_range) == 2:
-            start_date = pd.to_datetime(date_range[0])
-            end_date = pd.to_datetime(date_range[1]) + pd.Timedelta(days=1)
-            filtered_df = filtered_df[(filtered_df["Timestamp"] >= start_date) & (filtered_df["Timestamp"] < end_date)]
-    
-        # Show Summary Metrics
-        st.metric("Total Emails Sent", len(filtered_df))
-        st.metric("Success", (filtered_df["Status"] == "Success").sum())
-        st.metric("Failed", (filtered_df["Status"] == "Failed").sum())
-    
-        # Show Table
-        st.dataframe(filtered_df.sort_values("Timestamp", ascending=False), use_container_width=True)
-    
-        # Optionally add reset button
-        if st.button("🚨 Reset Email Logs"):
-            confirm = st.warning("Are you sure? This will delete all logs.")
-            if st.button("Yes, delete logs"):
+    st.subheader("📬 Email Logs")
+
+    try:
+        logs_df = get_email_logs()
+
+        if logs_df.empty:
+            st.info("No email logs found.")
+        else:
+            logs_df["timestamp"] = pd.to_datetime(logs_df["timestamp"])
+
+            with st.expander("🔍 Filter Logs"):
+                status_filter = st.multiselect("Status", logs_df["status"].unique())
+                date_range = st.date_input("Date range", [])
+
+            filtered_df = logs_df.copy()
+
+            if status_filter:
+                filtered_df = filtered_df[filtered_df["status"].isin(status_filter)]
+
+            if len(date_range) == 2:
+                start, end = pd.to_datetime(date_range[0]), pd.to_datetime(date_range[1])
+                filtered_df = filtered_df[
+                    (filtered_df["timestamp"] >= start) & (filtered_df["timestamp"] <= end)
+                ]
+
+            st.metric("Total Emails", len(filtered_df))
+            st.metric("Successful", (filtered_df["status"] == "sent").sum())
+            st.metric("Failed", (filtered_df["status"] == "failed").sum())
+
+            st.dataframe(filtered_df.sort_values("timestamp", ascending=False), use_container_width=True)
+
+            if st.button("🚨 Reset Email Logs"):
                 clear_email_logs()
-                st.success("Email logs cleared.")
-                st.experimental_rerun()
+                st.success("All email logs cleared.")
+                st.rerun()
+    except Exception as e:
+        st.error(f"Failed to load email logs: {e}")

@@ -14,6 +14,7 @@ from db import (
 )
 # st.set_page_config(page_title="FTA Login", layout="wide", initial_sidebar_state="collapsed")
 st.set_page_config(page_title="FTA Management", layout="wide")
+import sqlite3
 from db import DB_PATH
 
 print("Checking email_logs table in:", DB_PATH)

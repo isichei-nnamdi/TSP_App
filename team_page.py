@@ -148,14 +148,13 @@ def show_team_page(go_to):
     # --- Convert to DataFrame and show ---
     summary_df = pd.DataFrame(summary_data)
 
-    if not summary_df.empty:
-        total_assigned = summary_df["Total Assigned"].sum() if "Total Assigned" in summary_df.columns else 0
-        total_contacted = summary_df["Contacted"].sum() if "Contacted" in summary_df.columns else 0
-        total_not_contacted = summary_df["Not Contacted"].sum() if "Not Contacted" in summary_df.columns else 0
+    if not summary_df.empty and "Total Assigned" in summary_df.columns:
+        total_assigned = summary_df["Total Assigned"].sum()
+        total_contacted = summary_df["Contacted"].sum()
+        total_not_contacted = summary_df["Not Contacted"].sum()
     else:
-        total_assigned = 0
-        total_contacted = 0
-        total_not_contacted = 0
+        total_assigned = total_contacted = total_not_contacted = 0
+
     # total_assigned = summary_df["Total Assigned"].sum()
     # total_contacted = summary_df["Contacted"].sum()
     # total_not_contacted = summary_df["Not Contacted"].sum()

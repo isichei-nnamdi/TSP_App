@@ -125,22 +125,6 @@ def create_email_log_table():
         ''')
         conn.commit()
 
-# def create_email_log_table():
-#     with sqlite3.connect(DB_PATH) as conn:
-#         cursor = conn.cursor()
-#         cursor.execute('''
-#             CREATE TABLE IF NOT EXISTS email_logs (
-#                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-#                 timestamp TEXT,
-#                 fta_name TEXT,
-#                 email TEXT,
-#                 subject TEXT,
-#                 status TEXT,
-#                 error_message TEXT
-#             )
-#         ''')
-#         conn.commit()
-
 
 sender_email = st.secrets["secrets"]["address"]
 app_password = st.secrets["secrets"]["app_password"]
@@ -176,22 +160,6 @@ def log_email_sent(fta_id, email, fta_name, subject, status="sent", error_messag
         ''', (timestamp, fta_id, fta_name, email, subject, status, error_message))
         conn.commit()
         
-# def log_email_sent(fta_id, email, name, subject):
-#     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-#     with sqlite3.connect(DB_PATH) as conn:
-#         conn.execute("""
-#             CREATE TABLE IF NOT EXISTS email_logs (
-#                 fta_id TEXT,
-#                 email TEXT,
-#                 name TEXT,
-#                 subject TEXT,
-#                 timestamp TEXT
-#             )
-#         """)
-#         conn.execute("""
-#             INSERT INTO email_logs (fta_id, email, name, subject, timestamp)
-#             VALUES (?, ?, ?, ?, ?)
-#         """, (fta_id, email, name, subject, timestamp))
 
 def email_already_sent(fta_id):
     with sqlite3.connect(DB_PATH) as conn:
@@ -202,10 +170,6 @@ def email_already_sent(fta_id):
         ).fetchone()
         return result is not None
 
-# def email_already_sent(fta_id):
-#     with sqlite3.connect(DB_PATH) as conn:
-#         result = conn.execute("SELECT 1 FROM email_logs WHERE fta_id = ?", (fta_id,))
-#         return result.fetchone() is not None
 
 def sync_and_assign_fta_responses(gsheet_url):
     try:
@@ -222,10 +186,6 @@ def sync_and_assign_fta_responses(gsheet_url):
         name = row.get("Full Name", "FTA")
         email = row.get("Email address")
 
-        # if email and not email_already_sent(fta_id):
-        #     sent, subject = send_email(email, name)
-        #     if sent:
-        #         log_email_sent(fta_id, email, name, subject)
         if email and not email_already_sent(fta_id):
             sent, subject = send_email(email, name)
             if sent:
@@ -245,88 +205,6 @@ def sync_and_assign_fta_responses(gsheet_url):
 
     return df
     
-# def sync_and_assign_fta_responses(gsheet_url):
-#     try:
-#         df = pd.read_csv(gsheet_url)
-#         df.columns = df.columns.str.strip()
-#         df = df.drop_duplicates(subset=["FTA ID"])
-#     except Exception as e:
-#         print(f"[Sync Error] Failed to fetch sheet: {e}")
-#         return pd.DataFrame()
-
-#     with sqlite3.connect(DB_PATH) as conn:
-#         df.to_sql("fta_responses", conn, if_exists="replace", index=False)
-
-#     try:
-#         assign_new_ftas(df)
-#     except Exception as e:
-#         print(f"[Assignment Error] {e}")
-#         return pd.DataFrame()  # or return df if you still want to display the raw data
-
-#     return df
-
-# def sync_and_assign_fta_responses(gsheet_url):
-#     try:
-#         # Load from Google Sheets
-#         client = gspread.service_account_from_dict(st.secrets["secrets"])
-#         sheet = client.open_by_url(gsheet_url)
-#         ws = sheet.worksheet("Form Responses 1")
-#         data = ws.get_all_records()
-#         df = pd.DataFrame(data)
-#         df.columns = df.columns.str.strip()
-
-#         # Ensure 'email_sent' column exists
-#         if 'email_sent' not in df.columns:
-#             ws.update_cell(1, len(df.columns) + 1, "email_sent")
-#             df['email_sent'] = ""
-
-#         # Email log worksheet
-#         try:
-#             email_log_ws = sheet.worksheet("email_logs")
-#         except gspread.exceptions.WorksheetNotFound:
-#             email_log_ws = sheet.add_worksheet("email_logs", rows=1000, cols=5)
-#             email_log_ws.append_row(["timestamp", "fta_name", "email", "subject", "sender"])
-
-#         # Loop through rows to send email if not already sent
-#         for idx, row in df.iterrows():
-#             if not row.get("email_sent"):
-#                 fta_name = row.get("Full Name") or "FTA"
-#                 email = row.get("Email address")
-#                 if email:
-#                     subject = "Thank you for fellowshing with us at TSP today"
-#                     sender = st.secrets["secrets"]["address"]  # or your configured sender
-
-#                     # Send the email
-#                     send_email_to_fta(email, fta_name, subject, sender)
-
-#                     # Mark email as sent in original sheet
-#                     ws.update_cell(idx + 2, df.columns.get_loc("email_sent") + 1, "Yes")
-
-#                     # Log the email
-#                     email_log_ws.append_row([
-#                         datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-#                         fta_name,
-#                         email,
-#                         subject,
-#                         sender
-#                     ])
-
-#         # Continue with syncing to local DB
-#         df = df.drop_duplicates(subset=["FTA ID"])
-#     except Exception as e:
-#         print(f"[Sync Error] Failed to fetch sheet or send emails: {e}")
-#         return pd.DataFrame()
-
-#     with sqlite3.connect(DB_PATH) as conn:
-#         df.to_sql("fta_responses", conn, if_exists="replace", index=False)
-
-#     try:
-#         assign_new_ftas(df)
-#     except Exception as e:
-#         print(f"[Assignment Error] {e}")
-#         return pd.DataFrame()
-
-#     return df
 
 def assign_new_ftas(fta_df):
     fta_df.columns = fta_df.columns.str.strip()

@@ -104,14 +104,13 @@ def get_existing_assignments():
         df = pd.read_sql_query("SELECT * FROM fta_assignments", conn)
     return df
 
-
-
 def create_email_log_table():
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS email_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fta_id TEXT,  -- <-- This was missing!
                 timestamp TEXT,
                 fta_name TEXT,
                 email TEXT,
@@ -122,6 +121,21 @@ def create_email_log_table():
         ''')
         conn.commit()
 
+# def create_email_log_table():
+#     with sqlite3.connect(DB_PATH) as conn:
+#         cursor = conn.cursor()
+#         cursor.execute('''
+#             CREATE TABLE IF NOT EXISTS email_logs (
+#                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+#                 timestamp TEXT,
+#                 fta_name TEXT,
+#                 email TEXT,
+#                 subject TEXT,
+#                 status TEXT,
+#                 error_message TEXT
+#             )
+#         ''')
+#         conn.commit()
 
 
 sender_email = st.secrets["secrets"]["address"]

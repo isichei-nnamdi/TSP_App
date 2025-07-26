@@ -142,6 +142,7 @@ def show_team_page(go_to):
 
     # --- Convert to DataFrame and show ---
     summary_df = pd.DataFrame(summary_data)
+    st.write(summary_df)
     total_assigned = summary_df["Total Assigned"].sum()
     total_contacted = summary_df["Contacted"].sum()
     total_not_contacted = summary_df["Not Contacted"].sum()

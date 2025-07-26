@@ -146,14 +146,26 @@ def show_team_page(go_to):
         })
 
     # --- Convert to DataFrame and show ---
+    expected_cols = ["Email", "Full Name", "Total Assigned", "Contacted", "Not Contacted"]
     summary_df = pd.DataFrame(summary_data)
+
+    # Ensure DataFrame has the expected columns
+    for col in expected_cols:
+        if col not in summary_df.columns:
+            summary_df[col] = 0
+
+    # Compute totals safely
+    total_assigned = summary_df["Total Assigned"].sum()
+    total_contacted = summary_df["Contacted"].sum()
+    total_not_contacted = summary_df["Not Contacted"].sum()
+
     st.write(summary_df)
-    if not summary_df.empty and "Total Assigned" in summary_df.columns:
-        total_assigned = summary_df["Total Assigned"].sum()
-        total_contacted = summary_df["Contacted"].sum()
-        total_not_contacted = summary_df["Not Contacted"].sum()
-    else:
-        total_assigned = total_contacted = total_not_contacted = 0
+    # if not summary_df.empty and "Total Assigned" in summary_df.columns:
+    #     total_assigned = summary_df["Total Assigned"].sum()
+    #     total_contacted = summary_df["Contacted"].sum()
+    #     total_not_contacted = summary_df["Not Contacted"].sum()
+    # else:
+    #     total_assigned = total_contacted = total_not_contacted = 0
 
     # total_assigned = summary_df["Total Assigned"].sum()
     # total_contacted = summary_df["Contacted"].sum()

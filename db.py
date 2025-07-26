@@ -103,6 +103,26 @@ def get_existing_assignments():
         df = pd.read_sql_query("SELECT * FROM fta_assignments", conn)
     return df
 
+
+
+def create_email_log_table():
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS email_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT,
+                fta_name TEXT,
+                email TEXT,
+                subject TEXT,
+                status TEXT,
+                error_message TEXT
+            )
+        ''')
+        conn.commit()
+
+
+
 sender_email = st.secrets["secrets"]["address"]
 app_password = st.secrets["secrets"]["app_password"]
 
@@ -127,6 +147,16 @@ def send_email(receiver_email, fta_name):
         print(f"[Email Error] {e}")
         return False, None
 
+# def log_email_sent(timestamp, fta_name, email, subject, status, error_message=None):
+  
+#     with sqlite3.connect(DB_PATH) as conn:
+#         cursor = conn.cursor()
+#         cursor.execute('''
+#             INSERT INTO email_logs (timestamp, fta_name, email, subject, status, error_message)
+#             VALUES (?, ?, ?, ?, ?, ?)
+#         ''', (timestamp, fta_name, email, subject, status, error_message))
+#         conn.commit()
+        
 def log_email_sent(fta_id, email, name, subject):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with sqlite3.connect(DB_PATH) as conn:

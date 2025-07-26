@@ -246,14 +246,6 @@ def show_team_page(go_to):
     # === Display Feedback Table ===
     st.markdown("##### 📝 All Feedback from A-Team Members")
 
-    # with sqlite3.connect(DB_PATH) as conn:
-    #     all_feedback = pd.read_sql_query("SELECT * FROM fta_feedback", conn)
-
-    # if not all_feedback.empty:
-    #     all_feedback["submitted_at"] = pd.to_datetime(all_feedback["submitted_at"], errors="coerce")
-    #     all_feedback["Feedback_id"] = all_feedback["fta_id"] + " - " + all_feedback["call_type"]
-     # st.write(summary_df)
-
     col1, col2, col3, col4 = st.columns([2, 1, 1, 1.5])
     with col1:
         st.write("")
@@ -515,9 +507,72 @@ def show_team_page(go_to):
                     (filtered_df["timestamp"] >= start) & (filtered_df["timestamp"] <= end)
                 ]
 
-            st.metric("Total Emails", len(filtered_df))
-            st.metric("Successful", (filtered_df["status"] == "sent").sum())
-            st.metric("Failed", (filtered_df["status"] == "failed").sum())
+            Total Emails = len(filtered_df) #st.metric("Total Emails", len(filtered_df))
+            Successful = (filtered_df["status"] == "sent").sum() #st.metric("Successful", (filtered_df["status"] == "sent").sum())
+            Failed = (filtered_df["status"] == "failed").sum() #st.metric("Failed", (filtered_df["status"] == "failed").sum())
+            
+            # Define styles
+            card_style = """
+                <style>
+                .card-container {
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 20px;
+                }
+                .card {
+                    flex: 1;
+                    padding: 20px;
+                    border-radius: 12px;
+                    color: white;
+                    font-family: Arial, sans-serif;
+                    box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    min-height: 120px;
+                }
+                .card-red {
+                    background-color: #a00000;
+                }
+                .card-yellow {
+                    background-color: #ffe640;
+                    color: black;
+                }
+                .card-icon {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-size: 14px;
+                    font-weight: 500;
+                }
+                .card-value {
+                    font-size: 32px;
+                    font-weight: bold;
+                    margin-top: 5px;
+                }
+                </style>
+            """
+        
+            card_html = f"""
+            <div class="card-container">
+                <div class="card card-red">
+                    <div class="card-icon">Total Emails<span>📅</span></div>
+                    <div class="card-value">{Total Emails}</div>
+                </div>
+                <div class="card card-yellow">
+                    <div class="card-icon">Successful<span>✆✉</span></div>
+                    <div class="card-value">{Successful}</div>
+                </div>
+                <div class="card card-red">
+                    <div class="card-icon">Failed<span>👎</span></div>
+                    <div class="card-value">{Failed}</div>
+                </div>
+            </div>
+            """
+        
+            st.markdown(card_style, unsafe_allow_html=True)
+            st.markdown(card_html, unsafe_allow_html=True)
+
 
             st.dataframe(filtered_df.sort_values("timestamp", ascending=False), use_container_width=True)
 

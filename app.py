@@ -10,6 +10,7 @@ from db import (
     sync_and_assign_fta_responses,
     get_existing_assignments,
     create_feedback_table,
+    create_email_log_table,
 )
 # st.set_page_config(page_title="FTA Login", layout="wide", initial_sidebar_state="collapsed")
 st.set_page_config(page_title="FTA Management", layout="wide")
@@ -27,7 +28,7 @@ if "fta_assignments" not in st.session_state:
 # === Setup DB (create tables if not exist) ===
 create_users_table()
 create_feedback_table()
-# assign_new_ftas()
+create_email_log_table()
 init_assignment_tables()
 
 # === Sync once per session ===

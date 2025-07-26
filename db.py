@@ -148,37 +148,46 @@ def send_email(receiver_email, fta_name):
         print(f"[Email Error] {e}")
         return False, None
 
-# def log_email_sent(timestamp, fta_name, email, subject, status, error_message=None):
-  
-#     with sqlite3.connect(DB_PATH) as conn:
-#         cursor = conn.cursor()
-#         cursor.execute('''
-#             INSERT INTO email_logs (timestamp, fta_name, email, subject, status, error_message)
-#             VALUES (?, ?, ?, ?, ?, ?)
-#         ''', (timestamp, fta_name, email, subject, status, error_message))
-#         conn.commit()
-        
-def log_email_sent(fta_id, email, name, subject):
+def log_email_sent(fta_id, email, fta_name, subject, status="sent", error_message=None):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with sqlite3.connect(DB_PATH) as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS email_logs (
-                fta_id TEXT,
-                email TEXT,
-                name TEXT,
-                subject TEXT,
-                timestamp TEXT
-            )
-        """)
-        conn.execute("""
-            INSERT INTO email_logs (fta_id, email, name, subject, timestamp)
-            VALUES (?, ?, ?, ?, ?)
-        """, (fta_id, email, name, subject, timestamp))
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO email_logs (timestamp, fta_id, fta_name, email, subject, status, error_message)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (timestamp, fta_id, fta_name, email, subject, status, error_message))
+        conn.commit()
+        
+# def log_email_sent(fta_id, email, name, subject):
+#     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#     with sqlite3.connect(DB_PATH) as conn:
+#         conn.execute("""
+#             CREATE TABLE IF NOT EXISTS email_logs (
+#                 fta_id TEXT,
+#                 email TEXT,
+#                 name TEXT,
+#                 subject TEXT,
+#                 timestamp TEXT
+#             )
+#         """)
+#         conn.execute("""
+#             INSERT INTO email_logs (fta_id, email, name, subject, timestamp)
+#             VALUES (?, ?, ?, ?, ?)
+#         """, (fta_id, email, name, subject, timestamp))
 
 def email_already_sent(fta_id):
     with sqlite3.connect(DB_PATH) as conn:
-        result = conn.execute("SELECT 1 FROM email_logs WHERE fta_id = ?", (fta_id,))
-        return result.fetchone() is not None
+        cursor = conn.cursor()
+        result = cursor.execute(
+            "SELECT 1 FROM email_logs WHERE fta_id = ? AND status = 'sent' LIMIT 1",
+            (fta_id,)
+        ).fetchone()
+        return result is not None
+
+# def email_already_sent(fta_id):
+#     with sqlite3.connect(DB_PATH) as conn:
+#         result = conn.execute("SELECT 1 FROM email_logs WHERE fta_id = ?", (fta_id,))
+#         return result.fetchone() is not None
 
 def sync_and_assign_fta_responses(gsheet_url):
     try:
@@ -195,10 +204,16 @@ def sync_and_assign_fta_responses(gsheet_url):
         name = row.get("Full Name", "FTA")
         email = row.get("Email address")
 
+        # if email and not email_already_sent(fta_id):
+        #     sent, subject = send_email(email, name)
+        #     if sent:
+        #         log_email_sent(fta_id, email, name, subject)
         if email and not email_already_sent(fta_id):
             sent, subject = send_email(email, name)
             if sent:
-                log_email_sent(fta_id, email, name, subject)
+                log_email_sent(fta_id, email, name, subject, "sent")
+            else:
+                log_email_sent(fta_id, email, name, subject, "failed", "Send error")
 
     # Store in main table
     with sqlite3.connect(DB_PATH) as conn:

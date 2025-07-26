@@ -484,101 +484,101 @@ def show_team_page(go_to):
     # --- Admin Dashboard Section ---
     st.subheader("📬 Email Logs")
 
-    try:
-        logs_df = get_email_logs()
+    # try:
+    #     logs_df = get_email_logs()
 
-        if logs_df.empty:
-            st.info("No email logs found.")
-        else:
-            logs_df["timestamp"] = pd.to_datetime(logs_df["timestamp"])
+    #     if logs_df.empty:
+    #         st.info("No email logs found.")
+    #     else:
+    #         logs_df["timestamp"] = pd.to_datetime(logs_df["timestamp"])
 
-            with st.expander("🔍 Filter Logs"):
-                status_filter = st.multiselect("Status", logs_df["status"].unique())
-                date_range = st.date_input("Date range", [])
+    #         with st.expander("🔍 Filter Logs"):
+    #             status_filter = st.multiselect("Status", logs_df["status"].unique())
+    #             date_range = st.date_input("Date range", [])
 
-            filtered_df = logs_df.copy()
+    #         filtered_df = logs_df.copy()
 
-            if status_filter:
-                filtered_df = filtered_df[filtered_df["status"].isin(status_filter)]
+    #         if status_filter:
+    #             filtered_df = filtered_df[filtered_df["status"].isin(status_filter)]
 
-            if len(date_range) == 2:
-                start, end = pd.to_datetime(date_range[0]), pd.to_datetime(date_range[1])
-                filtered_df = filtered_df[
-                    (filtered_df["timestamp"] >= start) & (filtered_df["timestamp"] <= end)
-                ]
+    #         if len(date_range) == 2:
+    #             start, end = pd.to_datetime(date_range[0]), pd.to_datetime(date_range[1])
+    #             filtered_df = filtered_df[
+    #                 (filtered_df["timestamp"] >= start) & (filtered_df["timestamp"] <= end)
+    #             ]
 
-            Total Emails = len(filtered_df) #st.metric("Total Emails", len(filtered_df))
-            Successful = (filtered_df["status"] == "sent").sum() #st.metric("Successful", (filtered_df["status"] == "sent").sum())
-            Failed = (filtered_df["status"] == "failed").sum() #st.metric("Failed", (filtered_df["status"] == "failed").sum())
+    #         Total Emails = len(filtered_df) #st.metric("Total Emails", len(filtered_df))
+    #         Successful = (filtered_df["status"] == "sent").sum() #st.metric("Successful", (filtered_df["status"] == "sent").sum())
+    #         Failed = (filtered_df["status"] == "failed").sum() #st.metric("Failed", (filtered_df["status"] == "failed").sum())
             
-            # Define styles
-            card_style = """
-                <style>
-                .card-container {
-                    display: flex;
-                    justify-content: space-between;
-                    gap: 20px;
-                }
-                .card {
-                    flex: 1;
-                    padding: 20px;
-                    border-radius: 12px;
-                    color: white;
-                    font-family: Arial, sans-serif;
-                    box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: space-between;
-                    min-height: 120px;
-                }
-                .card-red {
-                    background-color: #a00000;
-                }
-                .card-yellow {
-                    background-color: #ffe640;
-                    color: black;
-                }
-                .card-icon {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    font-size: 14px;
-                    font-weight: 500;
-                }
-                .card-value {
-                    font-size: 32px;
-                    font-weight: bold;
-                    margin-top: 5px;
-                }
-                </style>
-            """
+    #         # Define styles
+    #         card_style = """
+    #             <style>
+    #             .card-container {
+    #                 display: flex;
+    #                 justify-content: space-between;
+    #                 gap: 20px;
+    #             }
+    #             .card {
+    #                 flex: 1;
+    #                 padding: 20px;
+    #                 border-radius: 12px;
+    #                 color: white;
+    #                 font-family: Arial, sans-serif;
+    #                 box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
+    #                 display: flex;
+    #                 flex-direction: column;
+    #                 justify-content: space-between;
+    #                 min-height: 120px;
+    #             }
+    #             .card-red {
+    #                 background-color: #a00000;
+    #             }
+    #             .card-yellow {
+    #                 background-color: #ffe640;
+    #                 color: black;
+    #             }
+    #             .card-icon {
+    #                 display: flex;
+    #                 justify-content: space-between;
+    #                 align-items: center;
+    #                 font-size: 14px;
+    #                 font-weight: 500;
+    #             }
+    #             .card-value {
+    #                 font-size: 32px;
+    #                 font-weight: bold;
+    #                 margin-top: 5px;
+    #             }
+    #             </style>
+    #         """
         
-            card_html = f"""
-            <div class="card-container">
-                <div class="card card-red">
-                    <div class="card-icon">Total Emails<span>📅</span></div>
-                    <div class="card-value">{Total Emails}</div>
-                </div>
-                <div class="card card-yellow">
-                    <div class="card-icon">Successful<span>✆✉</span></div>
-                    <div class="card-value">{Successful}</div>
-                </div>
-                <div class="card card-red">
-                    <div class="card-icon">Failed<span>👎</span></div>
-                    <div class="card-value">{Failed}</div>
-                </div>
-            </div>
-            """
+    #         card_html = f"""
+    #         <div class="card-container">
+    #             <div class="card card-red">
+    #                 <div class="card-icon">Total Emails<span>📅</span></div>
+    #                 <div class="card-value">{Total Emails}</div>
+    #             </div>
+    #             <div class="card card-yellow">
+    #                 <div class="card-icon">Successful<span>✆✉</span></div>
+    #                 <div class="card-value">{Successful}</div>
+    #             </div>
+    #             <div class="card card-red">
+    #                 <div class="card-icon">Failed<span>👎</span></div>
+    #                 <div class="card-value">{Failed}</div>
+    #             </div>
+    #         </div>
+    #         """
         
-            st.markdown(card_style, unsafe_allow_html=True)
-            st.markdown(card_html, unsafe_allow_html=True)
+    #         st.markdown(card_style, unsafe_allow_html=True)
+    #         st.markdown(card_html, unsafe_allow_html=True)
 
 
-            st.dataframe(filtered_df.sort_values("timestamp", ascending=False), use_container_width=True)
+    #         st.dataframe(filtered_df.sort_values("timestamp", ascending=False), use_container_width=True)
 
-            if st.button("🚨 Reset Email Logs"):
-                clear_email_logs()
-                st.success("All email logs cleared.")
-                st.rerun()
-    except Exception as e:
-        st.error(f"Failed to load email logs: {e}")
+    #         if st.button("🚨 Reset Email Logs"):
+    #             clear_email_logs()
+    #             st.success("All email logs cleared.")
+    #             st.rerun()
+    # except Exception as e:
+    #     st.error(f"Failed to load email logs: {e}")

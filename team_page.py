@@ -4,6 +4,7 @@ import sqlite3
 import plotly.graph_objects as go
 from datetime import datetime
 from db import get_all_a_team_members, add_a_team_member
+from reset_database import reset_database
 
 # ---------------------------------------------------------------------
 #  TEAM PAGE  ── Filters: Date range  +  A‑Team member  +  Reset button
@@ -19,7 +20,7 @@ def show_team_page(go_to):
 
     st.markdown("### 👥 A-Team Management")
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
         st.write(" ")
         st.write(" ")
@@ -65,6 +66,10 @@ def show_team_page(go_to):
             lambda row: search in row["email"].lower() or search in row["full_name"].lower(), axis=1
         )] if search else members_df
 
+    with col3:
+        if st.button("Reset Database"):
+            reset_database()
+            st.success("✅ Database has been reset successfully.")
 
     # --- Load members and assignments ---
     with sqlite3.connect(DB_PATH) as conn:

@@ -4,118 +4,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 import datetime as dt
 import sqlite3
-# import smtplib
-# from email.mime.text import MIMEText
-# from email.mime.multipart import MIMEMultipart
-# from datetime import datetime
-# import gspread
-
-
-
-# def send_email_to_fta(receiver_email, fta_name):
-#     sender_email = st.secrets["secrets"]["address"]
-#     app_password = st.secrets["secrets"]["app_password"]
-    
-#     subject = "Thank you for submitting your FTA Form"
-#     body = f"""
-#     Dear {fta_name},
-
-#     Thank you for completing the FTA form. We have received your submission.
-
-#     Best regards,
-#     TSP A-Team
-#     """
-
-#     # Create message
-#     message = MIMEMultipart()
-#     message["From"] = sender_email
-#     message["To"] = receiver_email
-#     message["Subject"] = subject
-#     message.attach(MIMEText(body, "plain"))
-
-#     # Send email
-#     try:
-#         server = smtplib.SMTP("smtp.gmail.com", 587)
-#         server.starttls()
-#         server.login(sender_email, app_password)
-#         server.sendmail(sender_email, receiver_email, message.as_string())
-#         server.quit()
-#         print(f"Email sent to {receiver_email}")
-#     except Exception as e:
-#         print(f"Failed to send email to {receiver_email}: {e}")
-
-# # === CONFIG ===
-# GSHEET_URL = st.secrets["secrets"]["gsheet_url"]
-# SENDER_EMAIL = st.secrets["secrets"]["address"]
-# APP_PASSWORD = st.secrets["secrets"]["app_password"]
-
-# # === Connect to Google Sheet ===
-# @st.cache_resource
-# def get_gspread_client():
-#     scopes = [
-#         "https://www.googleapis.com/auth/spreadsheets",
-#         "https://www.googleapis.com/auth/drive",
-#     ]
-#     return gspread.service_account_from_dict(st.secrets["google_service_account"], scopes=scopes)
-
-# gc = get_gspread_client()
-# spreadsheet = gc.open_by_url(GSHEET_URL)
-
-# # Get or create the 'email_logs' worksheet
-# def get_or_create_log_sheet():
-#     try:
-#         return spreadsheet.worksheet("email_logs")
-#     except gspread.exceptions.WorksheetNotFound:
-#         return spreadsheet.add_worksheet(title="email_logs", rows="1000", cols="10")
-
-# log_sheet = get_or_create_log_sheet()
-
-# # Ensure headers exist
-# if not log_sheet.get_all_values():
-#     log_sheet.append_row([
-#         "Timestamp", "FTA Name", "Email Address", "Subject", "Sender Email", "Status", "Error Message"
-#     ])
-
-# # === Log email activity ===
-# def log_email_to_sheet(name, receiver_email, subject, sender_email, status, error_msg=None):
-#     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-#     row = [
-#         now,
-#         name,
-#         receiver_email,
-#         subject,
-#         sender_email,
-#         status,
-#         error_msg or ""
-#     ]
-#     log_sheet.append_row(row, value_input_option="USER_ENTERED")
-
-# # === Email sending function ===
-# def send_email_to_fta(receiver_email, fta_name):
-#     subject = f"Thank you for submitting your FTA Form"
-
-#     message = MIMEText(f"""
-#     Dear {fta_name},
-
-#     Thank you for completing the FTA form. We have received your submission.
-
-#     Best regards,
-#     TSP A-Team
-#     """)
-#     message['From'] = SENDER_EMAIL
-#     message['To'] = receiver_email
-#     message['Subject'] = subject
-
-#     try:
-#         server = smtplib.SMTP("smtp.gmail.com", 587)
-#         server.starttls()
-#         server.login(SENDER_EMAIL, APP_PASSWORD)
-#         server.sendmail(SENDER_EMAIL, receiver_email, message.as_string())
-#         server.quit()
-#         log_email_to_sheet(fta_name, receiver_email, subject, SENDER_EMAIL, "Success")
-#     except Exception as e:
-#         log_email_to_sheet(fta_name, receiver_email, subject, SENDER_EMAIL, "Failed", str(e))
-
 
 # Utility function to safely get the first existing column
 def get_first_existing_column(df, options):
@@ -139,14 +27,6 @@ def show_dashboard_page(go_to):
 
     # === Normalize columns ===
     fta_raw_df.columns = fta_raw_df.columns.str.strip().str.lower()
-
-    # Example column names: 'name', 'email'
-    # for _, row in fta_raw_df.iterrows():
-    #     fta_name = row.get("Full Name", "FTA")
-    #     email = row.get("Email address")
-    
-    #     if email:
-    #         send_email_to_fta(email, fta_name)
 
     # === Get column names for new or old versions ===
     member_col = get_first_existing_column(
@@ -260,7 +140,10 @@ def show_dashboard_page(go_to):
         converted = df_feedback[df_feedback[mg_confirmation] == "M&G Confirmation"]["fta_id"].drop_duplicates().count()
     else:
         converted = 0
-
+    # -------------------------------------------------------------------------------------------
+    st.write(df_feedback)
+    # -------------------------------------------------------------------------------------------
+    
     conversion_rate = round((converted / total_invitees) * 100) if total_invitees else 0
 
     mg_data = df[mg_col].value_counts().to_dict() if mg_col else {}

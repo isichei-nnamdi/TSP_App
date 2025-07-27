@@ -564,17 +564,17 @@ def show_team_page(go_to):
                 st.write("")
                 st.dataframe(filtered_df.sort_values("timestamp", ascending=False), use_container_width=True)
 
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("🗑️ Delete all Failed Email Logs"):
-                        delete_failed_email_logs()
-                        st.success("All failed email logs deleted.")
-                        st.rerun()
-                with col2:
-                    if st.button("🚨 Reset Email Logs"):
-                        clear_email_logs()
-                        st.success("All email logs cleared.")
-                        st.rerun()
+                # col1, col2 = st.columns(2)
+                # with col1:
+                #     if st.button("🗑️ Delete all Failed Email Logs"):
+                #         delete_failed_email_logs()
+                #         st.success("All failed email logs deleted.")
+                #         st.rerun()
+                # with col2:
+                #     if st.button("🚨 Reset Email Logs"):
+                #         clear_email_logs()
+                #         st.success("All email logs cleared.")
+                #         st.rerun()
                         
         
         except Exception as e:

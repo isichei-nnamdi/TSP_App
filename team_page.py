@@ -566,14 +566,14 @@ def show_team_page(go_to):
 
                 col1, col2 = st.columns(2)
                 with col1:
-                    if st.button("🚨 Reset Email Logs"):
-                        clear_email_logs()
-                        st.success("All email logs cleared.")
-                        st.rerun()
-                with col2:
                     if st.button("🗑️ Delete all Failed Email Logs"):
                         delete_failed_email_logs()
                         st.success("All failed email logs deleted.")
+                        st.rerun()
+                with col2:
+                    if st.button("🚨 Reset Email Logs"):
+                        clear_email_logs()
+                        st.success("All email logs cleared.")
                         st.rerun()
                         
         

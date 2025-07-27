@@ -134,10 +134,10 @@ def show_dashboard_page(go_to):
     else:
         df_feedback = all_feedback.copy() 
 
-    mg_confirmation = "call_type"
+    mg_attended = "call_type"
 
-    if mg_confirmation:
-        converted = df_feedback[df_feedback[mg_confirmation] == "M&G Confirmation"]["fta_id"].drop_duplicates().count()
+    if mg_attended:
+        converted = df_feedback[df_feedback[mg_attended] == "M&G Attended"]["fta_id"].drop_duplicates().count()
     else:
         converted = 0
     # -------------------------------------------------------------------------------------------

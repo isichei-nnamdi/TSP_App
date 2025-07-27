@@ -158,11 +158,11 @@ def show_fta_page(go_to):
     
     new_ftas = filtered_ftas[
         (~filtered_ftas["fta_id"].isin(contacted_ids)) &
-        ((today - filtered_ftas["assigned_at"]).dt.days <= 5)
+        ((today - filtered_ftas["assigned_at"]).dt.days <= 2)
     ]
     not_contacted_ftas = filtered_ftas[
         (~filtered_ftas["fta_id"].isin(contacted_ids)) &
-        ((today - filtered_ftas["assigned_at"]).dt.days > 5)
+        ((today - filtered_ftas["assigned_at"]).dt.days > 2)
     ]
     contacted_ftas = filtered_ftas[filtered_ftas["fta_id"].isin(contacted_ids)]
 

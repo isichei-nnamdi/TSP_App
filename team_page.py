@@ -159,18 +159,6 @@ def show_team_page(go_to):
     total_contacted = summary_df["Contacted"].sum()
     total_not_contacted = summary_df["Not Contacted"].sum()
 
-    # st.write(summary_df)
-    # if not summary_df.empty and "Total Assigned" in summary_df.columns:
-    #     total_assigned = summary_df["Total Assigned"].sum()
-    #     total_contacted = summary_df["Contacted"].sum()
-    #     total_not_contacted = summary_df["Not Contacted"].sum()
-    # else:
-    #     total_assigned = total_contacted = total_not_contacted = 0
-
-    # total_assigned = summary_df["Total Assigned"].sum()
-    # total_contacted = summary_df["Contacted"].sum()
-    # total_not_contacted = summary_df["Not Contacted"].sum()
-
     # Define styles
     card_style = """
         <style>
@@ -575,11 +563,19 @@ def show_team_page(go_to):
                 st.write("")
                 st.write("")
                 st.dataframe(filtered_df.sort_values("timestamp", ascending=False), use_container_width=True)
-        
-                if st.button("🚨 Reset Email Logs"):
-                    clear_email_logs()
-                    st.success("All email logs cleared.")
-                    st.rerun()
+
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("🚨 Reset Email Logs"):
+                        clear_email_logs()
+                        st.success("All email logs cleared.")
+                        st.rerun()
+                with col2:
+                    if st.button("🗑️ Delete all Failed Email Logs"):
+                        delete_failed_email_logs()
+                        st.success("All failed email logs deleted.")
+                        st.rerun()
+                        
         
         except Exception as e:
             st.error(f"Failed to load email logs: {e}")

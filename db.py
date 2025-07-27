@@ -28,6 +28,16 @@ def clear_email_logs():
         conn.execute("DELETE FROM email_logs")
         conn.commit()
 
+# --- Function to delete failed emails logs ---
+def delete_failed_email_logs():
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("""
+            DELETE FROM email_logs
+            WHERE status IS NULL OR LOWER(status) IN ('failed', 'error')
+        """)
+        conn.commit()
+
+
 def create_users_table():
     with sqlite3.connect(DB_PATH, timeout=10) as conn:
         c = conn.cursor()

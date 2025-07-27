@@ -245,341 +245,343 @@ def show_team_page(go_to):
 
     # === Display Feedback Table ===
     st.markdown("##### 📝 All Feedback from A-Team Members")
-
-    col1, col2, col3, col4 = st.columns([2, 1, 1, 1.5])
-    with col1:
-        st.write("")
-    with col2:
-        min_date = all_feedback["submitted_at"].min().date() if not all_feedback["submitted_at"].isna().all() else datetime.today().date()
-        max_date = datetime.today().date() # all_feedback["submitted_at"].max().date() if not all_feedback["submitted_at"].isna().all() else
-        start_date = st.date_input("Start Date",
-                                value=min_date,
-                                min_value=min_date,
-                                max_value=max_date)
-    with col3:
-        end_date = st.date_input("End Date",
-                                value=max_date,
-                                min_value=min_date,
-                                max_value=max_date)
-    with col4:
-        selected_member = st.selectbox(
-        label="Filter by A-Team Member",
-        options=["All"] + all_feedback["email"].dropna().drop_duplicates().tolist()
-    )
-
-    # Filter by date
-    filtered_df = all_feedback[
-        (all_feedback["submitted_at"].dt.date >= start_date) &
-        (all_feedback["submitted_at"].dt.date <= end_date)
-    ]
-
-    # Filter by selected A-Team member
-    if selected_member != "All":
-        filtered_df = filtered_df[filtered_df["email"] == selected_member]
-
-    calltype, callsuccess, feedback = st.columns(3)
-    with calltype:
-        call_type = filtered_df["call_type"].value_counts().to_dict()
-
-        if call_type:
-            labels = list(call_type.keys())
-            values = list(call_type.values())
-
-            fig5 = go.Figure(go.Bar(
-                x=values,
-                y=labels,
-                orientation="h",
-                marker_color="#8B0000",
-                text=values,
-                textposition='outside',
-                textfont=dict(color="#8B0000")
-            ))
-
-            fig5.update_layout(
-                title_text="Call Type",
-                xaxis_title="Number of Calls",
-                yaxis_title=""
-            )
-
-            st.plotly_chart(fig5, use_container_width=True)
-        else:
-            st.info("No type of calls recorded yet.")
-    
-    with callsuccess:
-        call_success = filtered_df["call_success"].value_counts().to_dict()
-
-        if call_success:
-            labels = list(call_success.keys())
-            values = list(call_success.values())
-
-            fig5 = go.Figure(go.Bar(
-                x=values,
-                y=labels,
-                orientation="h",
-                marker_color= "#ffe640", # "#8B0000",
-                text=values,
-                textposition='outside',
-                textfont=dict(color="#8B0000")
-            ))
-
-            fig5.update_layout(
-                title_text="Was your call successful?",
-                xaxis_title="Number of Calls",
-                yaxis_title=""
-            )
-
-            st.plotly_chart(fig5, use_container_width=True)
-        else:
-            st.info("No successful calls made yet.")
-    
-    with feedback:
-        call_feedback = filtered_df["feedback_1"].value_counts().to_dict()
-
-        if call_feedback:
-            labels = list(call_feedback.keys())
-            values = list(call_feedback.values())
-
-            fig5 = go.Figure(go.Bar(
-                x=values,
-                y=labels,
-                orientation="h",
-                marker_color="#8B0000",
-                text=values,
-                textposition='outside',
-                textfont=dict(color="#8B0000")
-            ))
-
-            fig5.update_layout(
-                title_text="Call Feedback",
-                xaxis_title="Number of Calls",
-                yaxis_title=""
-            )
-
-            st.plotly_chart(fig5, use_container_width=True)
-        else:
-            st.info("No calls feedback recorded yet.")
-            
-    st.dataframe(filtered_df.sort_values("submitted_at", ascending=False), use_container_width=True)
-
-    st.markdown("---")
-
-    # === Allow deletion ===
-    st.markdown("###### ❌ Delete Feedback from A-Team Members")
-
-    # Ensure there's a primary key column for deletion (id), otherwise fallback
-    if "id" not in all_feedback.columns:
-        st.warning("Feedback table must include an 'id' column for proper deletion.")
-    else:
-        # Create display labels for multiselect
-        all_feedback["display_label"] = all_feedback.apply(
-            lambda row: f"{row['fta_id']} - {row['call_type']} - {row['submitted_at'].strftime('%Y-%m-%d %H:%M') if pd.notnull(row['submitted_at']) else 'N/A'}",
-            axis=1
+    try:
+        col1, col2, col3, col4 = st.columns([2, 1, 1, 1.5])
+        with col1:
+            st.write("")
+        with col2:
+            min_date = all_feedback["submitted_at"].min().date() if not all_feedback["submitted_at"].isna().all() else datetime.today().date()
+            max_date = datetime.today().date() # all_feedback["submitted_at"].max().date() if not all_feedback["submitted_at"].isna().all() else
+            start_date = st.date_input("Start Date",
+                                    value=min_date,
+                                    min_value=min_date,
+                                    max_value=max_date)
+        with col3:
+            end_date = st.date_input("End Date",
+                                    value=max_date,
+                                    min_value=min_date,
+                                    max_value=max_date)
+        with col4:
+            selected_member = st.selectbox(
+            label="Filter by A-Team Member",
+            options=["All"] + all_feedback["email"].dropna().drop_duplicates().tolist()
         )
-
-        # Build options as a dictionary: display_label -> id
-        delete_options = {row["display_label"]: row["id"] for _, row in all_feedback.iterrows()}
-
-        selected_labels = st.multiselect(
-            "Select Feedback to Delete:",
-            options=list(delete_options.keys())
-        )
-
-        if st.button("Delete Selected Feedback"):
-            if selected_labels:
-                selected_ids = [delete_options[label] for label in selected_labels]
-                with sqlite3.connect(DB_PATH) as conn:
-                    cursor = conn.cursor()
-                    cursor.executemany("DELETE FROM fta_feedback WHERE id = ?", [(fid,) for fid in selected_ids])
-                    conn.commit()
-                st.success(f"Deleted {len(selected_ids)} feedback record(s).")
-                st.rerun()
+    
+        # Filter by date
+        filtered_df = all_feedback[
+            (all_feedback["submitted_at"].dt.date >= start_date) &
+            (all_feedback["submitted_at"].dt.date <= end_date)
+        ]
+    
+        # Filter by selected A-Team member
+        if selected_member != "All":
+            filtered_df = filtered_df[filtered_df["email"] == selected_member]
+    
+        calltype, callsuccess, feedback = st.columns(3)
+        with calltype:
+            call_type = filtered_df["call_type"].value_counts().to_dict()
+    
+            if call_type:
+                labels = list(call_type.keys())
+                values = list(call_type.values())
+    
+                fig5 = go.Figure(go.Bar(
+                    x=values,
+                    y=labels,
+                    orientation="h",
+                    marker_color="#8B0000",
+                    text=values,
+                    textposition='outside',
+                    textfont=dict(color="#8B0000")
+                ))
+    
+                fig5.update_layout(
+                    title_text="Call Type",
+                    xaxis_title="Number of Calls",
+                    yaxis_title=""
+                )
+    
+                st.plotly_chart(fig5, use_container_width=True)
             else:
-                st.warning("No feedback selected.")
-
-
-
-    st.markdown("##### 🔥 Delete Assigned FTAs")
-
-    # === Load A-Team members for selection ===
-    with sqlite3.connect(DB_PATH) as conn:
-        a_team_df = pd.read_sql_query("SELECT email, full_name FROM a_team_members", conn)
-
-    if a_team_df.empty:
-        st.warning("No A-Team members available.")
-        st.stop()
-
-    selected_member = st.selectbox("Select A-Team Member", options=a_team_df["email"])
-
-    # === Load assignments for that member ===
-    with sqlite3.connect(DB_PATH) as conn:
-        query = "SELECT * FROM fta_assignments WHERE assigned_to = ?"
-        member_assignments = pd.read_sql_query(query, conn, params=(selected_member,))
-
-    if not member_assignments.empty:
-        st.write(f"Assigned FTAs for {selected_member}")
-        st.dataframe(member_assignments, use_container_width=True)
-
-        selected_ftas = st.multiselect(
-            "Select FTAs to delete:",
-            options=member_assignments["fta_id"],
-            format_func=lambda x: f"{x} - {member_assignments[member_assignments['fta_id'] == x]['full_name'].values[0]}"
-        )
-
-        if st.button("Delete Selected FTAs"):
-            with sqlite3.connect(DB_PATH) as conn:
-                cursor = conn.cursor()
-                for fta_id in selected_ftas:
-                    cursor.execute("DELETE FROM fta_assignments WHERE fta_id = ?", (fta_id,))
-                conn.commit()
-            st.success(f"{len(selected_ftas)} FTA(s) deleted.")
-            st.rerun()
-    else:
-        st.info(f"No FTAs assigned to {selected_member}.")
+                st.info("No type of calls recorded yet.")
+        
+        with callsuccess:
+            call_success = filtered_df["call_success"].value_counts().to_dict()
     
-
-    st.markdown("##### 🔁 Reassign FTAs from One A-Team Member to Another")
-    with sqlite3.connect(DB_PATH) as conn:
-        fta_options = pd.read_sql_query("SELECT fta_id, full_name, assigned_to FROM fta_assignments", conn)
-        members_df = pd.read_sql_query("SELECT email FROM a_team_members", conn)
-
-    if not fta_options.empty and not members_df.empty:
-        all_emails = members_df["email"].tolist()
-
-        # === Select A-Team member to filter FTAs ===
-        selected_source_member = st.selectbox("Select A-Team member to reassign from:", options=all_emails)
-
-        # === Filter FTAs assigned to that member ===
-        member_ftas = fta_options[fta_options["assigned_to"] == selected_source_member]
-
-        if member_ftas.empty:
-            st.info("No FTAs currently assigned to this member.")
+            if call_success:
+                labels = list(call_success.keys())
+                values = list(call_success.values())
+    
+                fig5 = go.Figure(go.Bar(
+                    x=values,
+                    y=labels,
+                    orientation="h",
+                    marker_color= "#ffe640", # "#8B0000",
+                    text=values,
+                    textposition='outside',
+                    textfont=dict(color="#8B0000")
+                ))
+    
+                fig5.update_layout(
+                    title_text="Was your call successful?",
+                    xaxis_title="Number of Calls",
+                    yaxis_title=""
+                )
+    
+                st.plotly_chart(fig5, use_container_width=True)
+            else:
+                st.info("No successful calls made yet.")
+        
+        with feedback:
+            call_feedback = filtered_df["feedback_1"].value_counts().to_dict()
+    
+            if call_feedback:
+                labels = list(call_feedback.keys())
+                values = list(call_feedback.values())
+    
+                fig5 = go.Figure(go.Bar(
+                    x=values,
+                    y=labels,
+                    orientation="h",
+                    marker_color="#8B0000",
+                    text=values,
+                    textposition='outside',
+                    textfont=dict(color="#8B0000")
+                ))
+    
+                fig5.update_layout(
+                    title_text="Call Feedback",
+                    xaxis_title="Number of Calls",
+                    yaxis_title=""
+                )
+    
+                st.plotly_chart(fig5, use_container_width=True)
+            else:
+                st.info("No calls feedback recorded yet.")
+                
+        st.dataframe(filtered_df.sort_values("submitted_at", ascending=False), use_container_width=True)
+    
+        st.markdown("---")
+    
+        # === Allow deletion ===
+        st.markdown("###### ❌ Delete Feedback from A-Team Members")
+    
+        # Ensure there's a primary key column for deletion (id), otherwise fallback
+        if "id" not in all_feedback.columns:
+            st.warning("Feedback table must include an 'id' column for proper deletion.")
         else:
-            # === Multi-select FTAs to reassign ===
-            selected_ftas = st.multiselect(
-                "Select FTAs to reassign:",
-                options=member_ftas["fta_id"],
-                format_func=lambda x: f"{x} - {member_ftas.loc[member_ftas['fta_id'] == x, 'full_name'].values[0]}"
+            # Create display labels for multiselect
+            all_feedback["display_label"] = all_feedback.apply(
+                lambda row: f"{row['fta_id']} - {row['call_type']} - {row['submitted_at'].strftime('%Y-%m-%d %H:%M') if pd.notnull(row['submitted_at']) else 'N/A'}",
+                axis=1
             )
-
-            # === Choose a different A-Team member to assign to ===
-            assignable_members = [email for email in all_emails if email != selected_source_member]
-            new_member = st.selectbox("Assign to:", options=assignable_members)
-
-            # === Button to trigger reassignment ===
-            if st.button("Reassign Selected FTAs"):
-                if selected_ftas:
+    
+            # Build options as a dictionary: display_label -> id
+            delete_options = {row["display_label"]: row["id"] for _, row in all_feedback.iterrows()}
+    
+            selected_labels = st.multiselect(
+                "Select Feedback to Delete:",
+                options=list(delete_options.keys())
+            )
+    
+            if st.button("Delete Selected Feedback"):
+                if selected_labels:
+                    selected_ids = [delete_options[label] for label in selected_labels]
                     with sqlite3.connect(DB_PATH) as conn:
                         cursor = conn.cursor()
-                        for fta_id in selected_ftas:
-                            cursor.execute(
-                                "UPDATE fta_assignments SET assigned_to = ?, assigned_at = ? WHERE fta_id = ?",
-                                (new_member, datetime.now().isoformat(), fta_id)
-                            )
+                        cursor.executemany("DELETE FROM fta_feedback WHERE id = ?", [(fid,) for fid in selected_ids])
                         conn.commit()
-                    st.success(f"{len(selected_ftas)} FTA(s) reassigned from {selected_source_member} to {new_member}.")
+                    st.success(f"Deleted {len(selected_ids)} feedback record(s).")
                     st.rerun()
                 else:
-                    st.warning("Please select at least one FTA to reassign.")
+                    st.warning("No feedback selected.")
     
-    # --- Admin Dashboard Section ---
-    st.subheader("📬 Email Logs")
-
-    try:
-        logs_df = get_email_logs()
     
-        if logs_df.empty:
-            st.info("No email logs found.")
-        else:
-            logs_df["timestamp"] = pd.to_datetime(logs_df["timestamp"])
     
-            with st.expander("🔍 Filter Logs"):
-                status_filter = st.multiselect("Status", logs_df["status"].unique())
-                date_range = st.date_input("Date range", [])
+        st.markdown("##### 🔥 Delete Assigned FTAs")
     
-            filtered_df = logs_df.copy()
+        # === Load A-Team members for selection ===
+        with sqlite3.connect(DB_PATH) as conn:
+            a_team_df = pd.read_sql_query("SELECT email, full_name FROM a_team_members", conn)
     
-            if status_filter:
-                filtered_df = filtered_df[filtered_df["status"].isin(status_filter)]
+        if a_team_df.empty:
+            st.warning("No A-Team members available.")
+            st.stop()
     
-            if len(date_range) == 2:
-                start, end = pd.to_datetime(date_range[0]), pd.to_datetime(date_range[1])
-                filtered_df = filtered_df[
-                    (filtered_df["timestamp"] >= start) & (filtered_df["timestamp"] <= end)
-                ]
+        selected_member = st.selectbox("Select A-Team Member", options=a_team_df["email"])
     
-            total_emails = len(filtered_df)
-            successful = (filtered_df["status"] == "sent").sum()
-            failed = (filtered_df["status"] == "failed").sum()
+        # === Load assignments for that member ===
+        with sqlite3.connect(DB_PATH) as conn:
+            query = "SELECT * FROM fta_assignments WHERE assigned_to = ?"
+            member_assignments = pd.read_sql_query(query, conn, params=(selected_member,))
     
-            # Define styles
-            card_style = """
-                <style>
-                .card-container {
-                    display: flex;
-                    justify-content: space-between;
-                    gap: 20px;
-                }
-                .card {
-                    flex: 1;
-                    padding: 20px;
-                    border-radius: 12px;
-                    color: white;
-                    font-family: Arial, sans-serif;
-                    box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: space-between;
-                    min-height: 120px;
-                }
-                .card-red {
-                    background-color: #a00000;
-                }
-                .card-yellow {
-                    background-color: #ffe640;
-                    color: black;
-                }
-                .card-icon {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    font-size: 14px;
-                    font-weight: 500;
-                }
-                .card-value {
-                    font-size: 32px;
-                    font-weight: bold;
-                    margin-top: 5px;
-                }
-                </style>
-            """
+        if not member_assignments.empty:
+            st.write(f"Assigned FTAs for {selected_member}")
+            st.dataframe(member_assignments, use_container_width=True)
     
-            card_html = f"""
-            <div class="card-container">
-                <div class="card card-red">
-                    <div class="card-icon">Total Emails<span>📅</span></div>
-                    <div class="card-value">{total_emails}</div>
-                </div>
-                <div class="card card-yellow">
-                    <div class="card-icon">Successful<span>✆✉</span></div>
-                    <div class="card-value">{successful}</div>
-                </div>
-                <div class="card card-red">
-                    <div class="card-icon">Failed<span>👎</span></div>
-                    <div class="card-value">{failed}</div>
-                </div>
-            </div>
-            """
+            selected_ftas = st.multiselect(
+                "Select FTAs to delete:",
+                options=member_assignments["fta_id"],
+                format_func=lambda x: f"{x} - {member_assignments[member_assignments['fta_id'] == x]['full_name'].values[0]}"
+            )
     
-            st.markdown(card_style, unsafe_allow_html=True)
-            st.markdown(card_html, unsafe_allow_html=True)
-            st.write("")
-            st.write("")
-            st.dataframe(filtered_df.sort_values("timestamp", ascending=False), use_container_width=True)
-    
-            if st.button("🚨 Reset Email Logs"):
-                clear_email_logs()
-                st.success("All email logs cleared.")
+            if st.button("Delete Selected FTAs"):
+                with sqlite3.connect(DB_PATH) as conn:
+                    cursor = conn.cursor()
+                    for fta_id in selected_ftas:
+                        cursor.execute("DELETE FROM fta_assignments WHERE fta_id = ?", (fta_id,))
+                    conn.commit()
+                st.success(f"{len(selected_ftas)} FTA(s) deleted.")
                 st.rerun()
+        else:
+            st.info(f"No FTAs assigned to {selected_member}.")
+        
     
+        st.markdown("##### 🔁 Reassign FTAs from One A-Team Member to Another")
+        with sqlite3.connect(DB_PATH) as conn:
+            fta_options = pd.read_sql_query("SELECT fta_id, full_name, assigned_to FROM fta_assignments", conn)
+            members_df = pd.read_sql_query("SELECT email FROM a_team_members", conn)
+    
+        if not fta_options.empty and not members_df.empty:
+            all_emails = members_df["email"].tolist()
+    
+            # === Select A-Team member to filter FTAs ===
+            selected_source_member = st.selectbox("Select A-Team member to reassign from:", options=all_emails)
+    
+            # === Filter FTAs assigned to that member ===
+            member_ftas = fta_options[fta_options["assigned_to"] == selected_source_member]
+    
+            if member_ftas.empty:
+                st.info("No FTAs currently assigned to this member.")
+            else:
+                # === Multi-select FTAs to reassign ===
+                selected_ftas = st.multiselect(
+                    "Select FTAs to reassign:",
+                    options=member_ftas["fta_id"],
+                    format_func=lambda x: f"{x} - {member_ftas.loc[member_ftas['fta_id'] == x, 'full_name'].values[0]}"
+                )
+    
+                # === Choose a different A-Team member to assign to ===
+                assignable_members = [email for email in all_emails if email != selected_source_member]
+                new_member = st.selectbox("Assign to:", options=assignable_members)
+    
+                # === Button to trigger reassignment ===
+                if st.button("Reassign Selected FTAs"):
+                    if selected_ftas:
+                        with sqlite3.connect(DB_PATH) as conn:
+                            cursor = conn.cursor()
+                            for fta_id in selected_ftas:
+                                cursor.execute(
+                                    "UPDATE fta_assignments SET assigned_to = ?, assigned_at = ? WHERE fta_id = ?",
+                                    (new_member, datetime.now().isoformat(), fta_id)
+                                )
+                            conn.commit()
+                        st.success(f"{len(selected_ftas)} FTA(s) reassigned from {selected_source_member} to {new_member}.")
+                        st.rerun()
+                    else:
+                        st.warning("Please select at least one FTA to reassign.")
+        
+        # --- Admin Dashboard Section ---
+        st.subheader("📬 Email Logs")
+    
+        try:
+            logs_df = get_email_logs()
+        
+            if logs_df.empty:
+                st.info("No email logs found.")
+            else:
+                logs_df["timestamp"] = pd.to_datetime(logs_df["timestamp"])
+        
+                with st.expander("🔍 Filter Logs"):
+                    status_filter = st.multiselect("Status", logs_df["status"].unique())
+                    date_range = st.date_input("Date range", [])
+        
+                filtered_df = logs_df.copy()
+        
+                if status_filter:
+                    filtered_df = filtered_df[filtered_df["status"].isin(status_filter)]
+        
+                if len(date_range) == 2:
+                    start, end = pd.to_datetime(date_range[0]), pd.to_datetime(date_range[1])
+                    filtered_df = filtered_df[
+                        (filtered_df["timestamp"] >= start) & (filtered_df["timestamp"] <= end)
+                    ]
+        
+                total_emails = len(filtered_df)
+                successful = (filtered_df["status"] == "sent").sum()
+                failed = (filtered_df["status"] == "failed").sum()
+        
+                # Define styles
+                card_style = """
+                    <style>
+                    .card-container {
+                        display: flex;
+                        justify-content: space-between;
+                        gap: 20px;
+                    }
+                    .card {
+                        flex: 1;
+                        padding: 20px;
+                        border-radius: 12px;
+                        color: white;
+                        font-family: Arial, sans-serif;
+                        box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-between;
+                        min-height: 120px;
+                    }
+                    .card-red {
+                        background-color: #a00000;
+                    }
+                    .card-yellow {
+                        background-color: #ffe640;
+                        color: black;
+                    }
+                    .card-icon {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        font-size: 14px;
+                        font-weight: 500;
+                    }
+                    .card-value {
+                        font-size: 32px;
+                        font-weight: bold;
+                        margin-top: 5px;
+                    }
+                    </style>
+                """
+        
+                card_html = f"""
+                <div class="card-container">
+                    <div class="card card-red">
+                        <div class="card-icon">Total Emails<span>📅</span></div>
+                        <div class="card-value">{total_emails}</div>
+                    </div>
+                    <div class="card card-yellow">
+                        <div class="card-icon">Successful<span>✆✉</span></div>
+                        <div class="card-value">{successful}</div>
+                    </div>
+                    <div class="card card-red">
+                        <div class="card-icon">Failed<span>👎</span></div>
+                        <div class="card-value">{failed}</div>
+                    </div>
+                </div>
+                """
+        
+                st.markdown(card_style, unsafe_allow_html=True)
+                st.markdown(card_html, unsafe_allow_html=True)
+                st.write("")
+                st.write("")
+                st.dataframe(filtered_df.sort_values("timestamp", ascending=False), use_container_width=True)
+        
+                if st.button("🚨 Reset Email Logs"):
+                    clear_email_logs()
+                    st.success("All email logs cleared.")
+                    st.rerun()
+        
+        except Exception as e:
+            st.error(f"Failed to load email logs: {e}")
     except Exception as e:
-        st.error(f"Failed to load email logs: {e}")
+        st.warning("⚠️ No feedback data available at the moment.")

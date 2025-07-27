@@ -140,9 +140,6 @@ def show_dashboard_page(go_to):
         converted = df_feedback[df_feedback[mg_attended] == "M&G Attended"]["fta_id"].drop_duplicates().count()
     else:
         converted = 0
-    # -------------------------------------------------------------------------------------------
-    st.write(df_feedback)
-    # -------------------------------------------------------------------------------------------
     
     conversion_rate = round((converted / total_invitees) * 100) if total_invitees else 0
 

@@ -89,6 +89,7 @@ def show_fta_page(go_to):
         on="fta_id", how="left"
     )
     st.write(enriched_ftas)
+    st.write(df_fta_response)
     # ---------------------------------------
     # === Load Feedback Data from SQLite ===
     # ---------------------------------------

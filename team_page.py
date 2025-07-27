@@ -479,10 +479,15 @@ def show_team_page(go_to):
                 st.info("No email logs found.")
             else:
                 logs_df["timestamp"] = pd.to_datetime(logs_df["timestamp"])
-        
-                with st.expander("🔍 Filter Logs"):
-                    status_filter = st.multiselect("Status", logs_df["status"].unique())
-                    date_range = st.date_input("Date range", [])
+
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.write("")
+
+                with col2:
+                    with st.expander("🔍 Filter Logs"):
+                        status_filter = st.multiselect("Status", logs_df["status"].unique())
+                        date_range = st.date_input("Date range", [])
         
                 filtered_df = logs_df.copy()
         

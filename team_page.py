@@ -3,7 +3,7 @@ import pandas as pd
 import sqlite3
 import plotly.graph_objects as go
 from datetime import datetime
-from db import get_all_a_team_members, add_a_team_member, get_email_logs, clear_email_logs
+from db import get_all_a_team_members, add_a_team_member, get_email_logs, clear_email_logs, delete_failed_email_logs
 from reset_db import reset_database
 
 # ---------------------------------------------------------------------

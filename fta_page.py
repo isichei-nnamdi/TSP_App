@@ -88,7 +88,7 @@ def show_fta_page(go_to):
         user_ftas[["fta_id", "assigned_at"]],
         on="fta_id", how="left"
     )
-
+    st.write(enriched_ftas)
     # ---------------------------------------
     # === Load Feedback Data from SQLite ===
     # ---------------------------------------

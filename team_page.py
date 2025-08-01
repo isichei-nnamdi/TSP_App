@@ -17,7 +17,11 @@ def show_team_page(go_to):
         st.error("You are not authorized to view this page.")
         st.stop()
 
-
+    import os
+    
+    db_file = "fta.db"
+    st.write("Database path:", os.path.abspath(db_file))
+    
     st.markdown("### 👥 A-Team Management")
 
     col1, col2 = st.columns(2)

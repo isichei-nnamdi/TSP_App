@@ -10,8 +10,8 @@ from email.mime.multipart import MIMEMultipart
 import hashlib
 
 import os
-DB_PATH = os.path.join(os.path.dirname(__file__), 'fta.db')
-# DB_PATH = "fta.db"
+# DB_PATH = os.path.join(os.path.dirname(__file__), 'fta.db')
+DB_PATH = "/databases/fta.db"
 
 def hash_value(value):
     if value is None:

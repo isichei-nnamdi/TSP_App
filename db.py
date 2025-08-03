@@ -11,7 +11,7 @@ import hashlib
 
 import os
 # DB_PATH = os.path.join(os.path.dirname(__file__), 'fta.db')
-DB_PATH = "/databases/fta.db"
+DB_PATH = "/database/fta.db"
 
 def hash_value(value):
     if value is None:

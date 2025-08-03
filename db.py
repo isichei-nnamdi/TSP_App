@@ -311,8 +311,12 @@ def init_assignment_tables():
                     last_assigned_index INTEGER
                 )
             ''')
-            c.execute('INSERT INTO assignment_tracker (id, last_assigned_index) VALUES (1, -1)
-                       ON CONFLICT (id) DO NOTHING')
+            c.execute('''
+                INSERT INTO assignment_tracker (id, last_assigned_index)
+                VALUES (1, -1)
+                ON CONFLICT (id) DO NOTHING
+            ''')
+
 
 def add_a_team_member(email, full_name):
     conn = get_connection()

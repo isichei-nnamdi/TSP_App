@@ -231,7 +231,7 @@ def log_email_sent(fta_id, email, fta_name, subject, status="sent", error_messag
         cursor.execute('''
             INSERT INTO email_logs (timestamp, fta_id, fta_name, email, subject, status, error_message)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (timestamp, fta_id, fta_name, hashed_email, subject, status, error_message))
+        ''', (timestamp, fta_id, fta_name, email, subject, status, error_message))
         conn.commit()
         
 

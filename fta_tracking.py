@@ -5,6 +5,12 @@ from datetime import datetime
 
 DB_PATH = "fta.db"
 
+def hash_value(value):
+    if value is None:
+        return None
+    return hashlib.sha256(value.encode('utf-8')).hexdigest() 
+
+
 def show_feedback_tracking_page(go_to):
     df_fta_response = st.session_state["fta_data"]
     st.title("🗣️ FTA Feedback Tracking")
@@ -92,7 +98,7 @@ def show_feedback_tracking_page(go_to):
         # --- Submit Feedback ---
         if st.button("Submit Feedback"):
             submitted_at = datetime.now().isoformat()
-
+            
             with sqlite3.connect(DB_PATH) as conn:
                 conn.execute('''
                     INSERT INTO fta_feedback (

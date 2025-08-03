@@ -60,7 +60,7 @@ def show_dashboard_page(go_to):
         st.markdown("### Welcome to the A-Team Dashboard")
 
     # ▶️ NEW / CHANGED: provide default dates bounded by data
-    DB_PATH = "fta.db"
+    DB_PATH = "/database/fta.db"
     with sqlite3.connect(DB_PATH) as conn:
         all_feedback = pd.read_sql_query("SELECT * FROM fta_feedback", conn)
     

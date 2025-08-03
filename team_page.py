@@ -21,7 +21,7 @@ def show_team_page(go_to):
 
     DB_PATH = os.path.join(os.path.dirname(__file__), 'fta.db')
     # db_file = "fta.db"
-    st.write("Database path:", os.path.abspath(db_file))
+    st.write("Database path:", os.path.abspath(DB_PATH))
     # Path to your database
     # db_path = "/mount/src/tsp_app/fta.db"
     

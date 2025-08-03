@@ -18,11 +18,13 @@ def show_team_page(go_to):
         st.stop()
 
     import os
-    
-    db_file = "fta.db"
+
+    DB_PATH = os.path.join(os.path.dirname(__file__), 'fta.db')
+    # db_file = "fta.db"
     st.write("Database path:", os.path.abspath(db_file))
     # Path to your database
     # db_path = "/mount/src/tsp_app/fta.db"
+    
     
     # # Read the file in binary mode
     # with open(db_path, "rb") as f:

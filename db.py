@@ -13,7 +13,7 @@ from email.mime.multipart import MIMEMultipart
 
 # --- Supabase PostgreSQL Connection Setup ---
 # Replace with your actual Supabase DB credentials
-DB_HOST = st.secretsst["secrets"]["DB_HOST"]
+DB_HOST = st.secrets["secrets"]["DB_HOST"]
 DB_NAME = st.secrets["secrets"]["DB_NAME"]
 DB_USER = st.secrets["secrets"]["DB_USER"]
 DB_PASSWORD = st.secrets["secrets"]["DB_PASSWORD"]

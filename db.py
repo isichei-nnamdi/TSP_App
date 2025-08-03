@@ -21,7 +21,8 @@ DB_PORT = st.secrets.get(5432)  # default PostgreSQL port
 
 # DB_PATH = "fta.db"
 
-def create_connection():
+# def create_connection():
+def get_connection():
     try:
         conn = psycopg2.connect(
             host=DB_HOST,
@@ -117,7 +118,7 @@ def create_connection():
 # ======================= USER MANAGEMENT (PostgreSQL) =======================
 # --- Function to get logs ---
 def get_email_logs():
-    conn = connect_db()
+    conn = get_connection()
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute('''
@@ -132,7 +133,7 @@ def get_email_logs():
 
 # --- Function to clear logs ---
 def clear_email_logs():
-    conn = connect_db()
+    conn = get_connection()
     try:
         with conn.cursor() as cur:
             cur.execute("DELETE FROM email_logs")
@@ -142,7 +143,7 @@ def clear_email_logs():
 
 # --- Function to delete failed emails logs ---
 def delete_failed_email_logs():
-    conn = connect_db()
+    conn = get_connection()
     try:
         with conn.cursor() as cur:
             cur.execute("""
@@ -155,7 +156,7 @@ def delete_failed_email_logs():
 
 
 def create_users_table():
-    conn = connect_db()
+    conn = get_connection()
     try:
         with conn.cursor() as cur:
             cur.execute('''
@@ -173,7 +174,7 @@ def create_users_table():
 
 def add_user(email, password, role='A-Team'):
     password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-    conn = connect_db()
+    conn = get_connection()
     try:
         with conn.cursor() as cur:
             cur.execute('INSERT INTO users (email, password_hash, role) VALUES (%s, %s, %s)',
@@ -190,7 +191,7 @@ def add_user(email, password, role='A-Team'):
 
 
 def authenticate_user(email, password):
-    conn = connect_db()
+    conn = get_connection()
     try:
         with conn.cursor() as cur:
             cur.execute('SELECT password_hash FROM users WHERE email = %s', (email,))
@@ -203,7 +204,7 @@ def authenticate_user(email, password):
 
 
 def get_user_role(email):
-    conn = connect_db()
+    conn = get_connection()
     try:
         with conn.cursor() as cur:
             cur.execute('SELECT role FROM users WHERE email = %s', (email,))
@@ -215,7 +216,7 @@ def get_user_role(email):
 
 def reset_password(email, new_password):
     password_hash = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt()).decode()
-    conn = connect_db()
+    conn = get_connection()
     try:
         with conn.cursor() as cur:
             cur.execute('UPDATE users SET password_hash = %s WHERE email = %s', (password_hash, email))

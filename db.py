@@ -229,7 +229,7 @@ def log_email_sent(fta_id, email, fta_name, subject, status="sent", error_messag
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO email_logs (timestamp, fta_id, fta_name, hashed_email, subject, status, error_message)
+            INSERT INTO email_logs (timestamp, fta_id, fta_name, email, subject, status, error_message)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         ''', (timestamp, fta_id, fta_name, hashed_email, subject, status, error_message))
         conn.commit()
@@ -273,9 +273,9 @@ def sync_and_assign_fta_responses(gsheet_url):
     
         sent, subject = send_email(email, name)
         if sent:
-            log_email_sent(fta_id, hash_value(email), name, subject, "sent")
+            log_email_sent(fta_id, email, name, subject, "sent")
         else:
-            log_email_sent(fta_id, hash_value(email), name, subject, "failed", "Send error")
+            log_email_sent(fta_id, email, name, subject, "failed", "Send error")
 
     # Store in main table
     with sqlite3.connect(DB_PATH) as conn:

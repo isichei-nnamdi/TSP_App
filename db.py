@@ -39,11 +39,8 @@ def add_user_to_a_team_if_needed(user: User, session: Session):
 
 
 # ============ CONFIG ============
-# sender_email = st.secrets["secrets"]["address"]
-# app_password = st.secrets["secrets"]["app_password"]
-
-sender_email = "tspateam@gmail.com"
-app_password = "tspateam@gmail.com"
+sender_email = st.secrets["secrets"]["address"]
+app_password = st.secrets["secrets"]["app_password"]
 
 
 # ============ AUTH ============

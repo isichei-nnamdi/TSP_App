@@ -409,19 +409,19 @@ def show_fta_page(go_to):
             st.info("No feedback records to chart yet.")
 
         
-        # ------------------------------------------------
-        # === Helper Function to Show Filtered Tables ===
-        # ------------------------------------------------
-        def show_table(title, df):
-            if not df.empty:
-                st.markdown(f"### {title}")
-                st.dataframe(df.sort_values("assigned_at", ascending=False), use_container_width=True)
-            else:
-                st.info(f"No entries in: {title}")
+    # ------------------------------------------------
+    # === Helper Function to Show Filtered Tables ===
+    # ------------------------------------------------
+    def show_table(title, df):
+        if not df.empty:
+            st.markdown(f"### {title}")
+            st.dataframe(df.sort_values("assigned_at", ascending=False), use_container_width=True)
+        else:
+            st.info(f"No entries in: {title}")
 
-        # ------------------------------------
-        # === Display Filtered FTA Tables ===
-        # ------------------------------------
-        show_table("Newly Assigned FTAs", new_ftas)
-        show_table("FTAs Not Yet Contacted", not_contacted_ftas)
-        show_table("Contacted FTAs", contacted_ftas)
+    # ------------------------------------
+    # === Display Filtered FTA Tables ===
+    # ------------------------------------
+    show_table("Newly Assigned FTAs", new_ftas)
+    show_table("FTAs Not Yet Contacted", not_contacted_ftas)
+    show_table("Contacted FTAs", contacted_ftas)

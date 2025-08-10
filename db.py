@@ -116,6 +116,37 @@ def email_already_sent(fta_id):
     db.close()
     return exists is not None
 
+# --- New function to resend failed emails ---
+def resend_failed_emails():
+    db = SessionLocal()
+    failed_logs = db.query(EmailLogs).filter(EmailLogs.status == "failed").all()
+    db.close()
+
+    if not failed_logs:
+        st.info("✅ No failed email logs to resend.")
+        return
+
+    st.write(f"🔄 Attempting to resend {len(failed_logs)} failed emails...")
+
+    for log in failed_logs:
+        success, subject = send_email(log.email, log.fta_name)
+
+        # Capture new log with error message if failed
+        if success:
+            log_email_sent(log.fta_id, log.email, log.fta_name, subject, status="sent")
+        else:
+            log_email_sent(
+                log.fta_id,
+                log.email,
+                log.fta_name,
+                subject or "No Subject",
+                status="failed",
+                error_message="Retry failed"  # Will be overwritten by send_email's error message handling
+            )
+
+    st.success("✅ Resend attempt completed.")
+    
+
 def get_all_a_team_members():
     db = SessionLocal()
     members = db.query(User).filter(User.role == "A-Team").all()

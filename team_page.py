@@ -511,10 +511,76 @@ def show_team_page(go_to):
             st.info(f"No FTAs assigned to {selected_member}.")
         
     
+        # st.markdown("##### 🔁 Reassign FTAs from One A-Team Member to Another")
+        # # with sqlite3.connect(DB_PATH) as conn:
+        # #     fta_options = pd.read_sql_query("SELECT fta_id, full_name, assigned_to FROM fta_assignments", conn)
+        # #     members_df = pd.read_sql_query("SELECT email FROM a_team_members", conn)
+        # with get_session() as session:
+        #     # Query FTA assignments
+        #     fta_data = session.query(
+        #         FtaAssignments.fta_id,
+        #         FtaAssignments.name,
+        #         FtaAssignments.assigned_to
+        #     ).all()
+        #     fta_options = pd.DataFrame(fta_data, columns=["fta_id", "full_name", "assigned_to"])
+
+        #     # Query A-Team members' emails
+        #     members_data = session.query(ATeamMember.email).all()
+        #     members_df = pd.DataFrame(members_data, columns=["email"])
+    
+        # if not fta_options.empty and not members_df.empty:
+        #     all_emails = members_df["email"].tolist()
+    
+        #     # === Select A-Team member to filter FTAs ===
+        #     selected_source_member = st.selectbox("Select A-Team member to reassign from:", options=all_emails)
+    
+        #     # === Filter FTAs assigned to that member ===
+        #     member_ftas = fta_options[fta_options["assigned_to"] == selected_source_member]
+    
+        #     if member_ftas.empty:
+        #         st.info("No FTAs currently assigned to this member.")
+        #     else:
+        #         # === Multi-select FTAs to reassign ===
+        #         selected_ftas = st.multiselect(
+        #             "Select FTAs to reassign:",
+        #             options=member_ftas["fta_id"],
+        #             format_func=lambda x: f"{x} - {member_ftas.loc[member_ftas['fta_id'] == x, 'full_name'].values[0]}"
+        #         )
+    
+        #         # === Choose a different A-Team member to assign to ===
+        #         assignable_members = [email for email in all_emails if email != selected_source_member]
+        #         new_member = st.selectbox("Assign to:", options=assignable_members)
+    
+        #         # === Button to trigger reassignment ===
+        #         if st.button("Reassign Selected FTAs"):
+        #             # if selected_ftas:
+        #             #     with sqlite3.connect(DB_PATH) as conn:
+        #             #         cursor = conn.cursor()
+        #             #         for fta_id in selected_ftas:
+        #             #             cursor.execute(
+        #             #                 "UPDATE fta_assignments SET assigned_to = ?, assigned_at = ? WHERE fta_id = ?",
+        #             #                 (new_member, datetime.now().isoformat(), fta_id)
+        #             #             )
+        #             #         conn.commit()
+        #             #     st.success(f"{len(selected_ftas)} FTA(s) reassigned from {selected_source_member} to {new_member}.")
+        #             #     st.rerun()
+        #             # else:
+        #             #     st.warning("Please select at least one FTA to reassign.")
+        #             if selected_ftas:
+        #                 with get_session() as session:
+        #                     for fta_id in selected_ftas:
+        #                         assignment = session.query(FtaAssignments).filter_by(fta_id=fta_id).first()
+        #                         if assignment:
+        #                             assignment.assigned_to = new_member
+        #                             assignment.assigned_at = datetime.now().isoformat()
+        #                     session.commit()
+
+        #                 st.success(f"{len(selected_ftas)} FTA(s) reassigned from {selected_source_member} to {new_member}.")
+        #                 st.rerun()
+        #             else:
+        #                 st.warning("Please select at least one FTA to reassign.")
         st.markdown("##### 🔁 Reassign FTAs from One A-Team Member to Another")
-        # with sqlite3.connect(DB_PATH) as conn:
-        #     fta_options = pd.read_sql_query("SELECT fta_id, full_name, assigned_to FROM fta_assignments", conn)
-        #     members_df = pd.read_sql_query("SELECT email FROM a_team_members", conn)
+
         with get_session() as session:
             # Query FTA assignments
             fta_data = session.query(
@@ -523,62 +589,46 @@ def show_team_page(go_to):
                 FtaAssignments.assigned_to
             ).all()
             fta_options = pd.DataFrame(fta_data, columns=["fta_id", "full_name", "assigned_to"])
-
+        
             # Query A-Team members' emails
             members_data = session.query(ATeamMember.email).all()
             members_df = pd.DataFrame(members_data, columns=["email"])
-    
+        
         if not fta_options.empty and not members_df.empty:
             all_emails = members_df["email"].tolist()
-    
-            # === Select A-Team member to filter FTAs ===
+        
             selected_source_member = st.selectbox("Select A-Team member to reassign from:", options=all_emails)
-    
-            # === Filter FTAs assigned to that member ===
+        
             member_ftas = fta_options[fta_options["assigned_to"] == selected_source_member]
-    
+        
             if member_ftas.empty:
                 st.info("No FTAs currently assigned to this member.")
             else:
-                # === Multi-select FTAs to reassign ===
                 selected_ftas = st.multiselect(
                     "Select FTAs to reassign:",
                     options=member_ftas["fta_id"],
                     format_func=lambda x: f"{x} - {member_ftas.loc[member_ftas['fta_id'] == x, 'full_name'].values[0]}"
                 )
-    
-                # === Choose a different A-Team member to assign to ===
+        
                 assignable_members = [email for email in all_emails if email != selected_source_member]
                 new_member = st.selectbox("Assign to:", options=assignable_members)
-    
-                # === Button to trigger reassignment ===
+        
                 if st.button("Reassign Selected FTAs"):
-                    # if selected_ftas:
-                    #     with sqlite3.connect(DB_PATH) as conn:
-                    #         cursor = conn.cursor()
-                    #         for fta_id in selected_ftas:
-                    #             cursor.execute(
-                    #                 "UPDATE fta_assignments SET assigned_to = ?, assigned_at = ? WHERE fta_id = ?",
-                    #                 (new_member, datetime.now().isoformat(), fta_id)
-                    #             )
-                    #         conn.commit()
-                    #     st.success(f"{len(selected_ftas)} FTA(s) reassigned from {selected_source_member} to {new_member}.")
-                    #     st.rerun()
-                    # else:
-                    #     st.warning("Please select at least one FTA to reassign.")
                     if selected_ftas:
                         with get_session() as session:
                             for fta_id in selected_ftas:
                                 assignment = session.query(FtaAssignments).filter_by(fta_id=fta_id).first()
                                 if assignment:
                                     assignment.assigned_to = new_member
-                                    assignment.assigned_at = datetime.now().isoformat()
+                                    assignment.assigned_at = datetime.now()  # use datetime object, not string
                             session.commit()
-
                         st.success(f"{len(selected_ftas)} FTA(s) reassigned from {selected_source_member} to {new_member}.")
-                        st.rerun()
+                        st.experimental_rerun()
                     else:
                         st.warning("Please select at least one FTA to reassign.")
+        else:
+            st.warning("No FTAs or members found to perform reassignment.")
+            
 
         # --- Admin Dashboard Section ---
         st.subheader("📬 Email Logs")

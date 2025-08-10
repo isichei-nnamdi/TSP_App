@@ -2,20 +2,6 @@
 # from sqlalchemy import create_engine
 # from sqlalchemy.orm import sessionmaker
 # from models import Base
-# import models  # ✅ Force import so all classes are registered
-
-# DATABASE_URL = "sqlite:///fta.db"
-
-# engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-# SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# def init_db():
-#     # This will now include Feedback and all other models
-#     Base.metadata.create_all(bind=engine)
-
-# def get_session():
-#     return SessionLocal()
-
 # db_session.py
 import os
 from sqlalchemy import create_engine

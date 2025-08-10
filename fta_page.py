@@ -52,7 +52,16 @@ def show_fta_page(go_to):
     else:
         greeting = "Hello"
 
-
+    # ------------------------------------------------
+    # === Helper Function to Show Filtered Tables ===
+    # ------------------------------------------------
+    def show_table(title, df):
+        if not df.empty:
+            st.markdown(f"### {title}")
+            st.dataframe(df.sort_values("assigned_at", ascending=False), use_container_width=True)
+        else:
+            st.info(f"No entries in: {title}")
+                
     # ----------------------------------------------------
     # === Normalize and Rename Columns in FTA Response ===
     # ----------------------------------------------------
@@ -369,6 +378,7 @@ def show_fta_page(go_to):
 
         chart_col1, chart_col2 = st.columns(2)
         if feedback_df.empty:
+            show_table("Newly Assigned FTAs", new_ftas)
             st.info("No feedback records to chart yet.")
         else:
             with chart_col1:
@@ -407,18 +417,7 @@ def show_fta_page(go_to):
                     st.plotly_chart(fig5, use_container_width=True)
                 else:
                     st.info("Call success data not available.")
-            
 
-        
-        # ------------------------------------------------
-        # === Helper Function to Show Filtered Tables ===
-        # ------------------------------------------------
-        def show_table(title, df):
-            if not df.empty:
-                st.markdown(f"### {title}")
-                st.dataframe(df.sort_values("assigned_at", ascending=False), use_container_width=True)
-            else:
-                st.info(f"No entries in: {title}")
     
         # ------------------------------------
         # === Display Filtered FTA Tables ===

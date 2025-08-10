@@ -11,17 +11,6 @@ def authenticate_user(email, password, session):
         return True
     return False
 
-
-# def add_user(email, password, role, session):
-#     try:
-#         hashed_password = generate_password_hash(password)
-#         new_user = User(email=email, password=hashed_password, role=role)
-#         session.add(new_user)
-#         session.commit()
-#         return True
-#     except IntegrityError:
-#         session.rollback()
-#         return False
 def add_user(email, password, role, session):
     try:
         hashed_password = generate_password_hash(password)
@@ -61,11 +50,8 @@ def show_login_page(go_to):
     session = get_session()
 
     # Load domain & admin config from secrets
-    # approved_domains = st.secrets["secrets"]["approved_domains"]
-    # admin_emails = st.secrets["secrets"]["admin_emails"]
-
-    approved_domains = ["tspchurch.com"]
-    admin_emails = ["dorcas@tspchurch.com", "admin@tspchurch.com"]
+    approved_domains = st.secrets["secrets"]["approved_domains"]
+    admin_emails = st.secrets["secrets"]["admin_emails"]
 
     # === LAYOUT ===
     left_col, right_col = st.columns([1, 1.5])

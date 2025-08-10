@@ -700,6 +700,13 @@ def show_team_page(go_to):
                     #     resend_failed_emails()
                     #     st.rerun()
                     # Step 1: Fetch failed emails from DB
+                    from sqlalchemy import create_engine
+                    from sqlalchemy.orm import sessionmaker
+                    
+                    DATABASE_URL = "sqlite:///path_to_your_db.db"
+                    
+                    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+                    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
                     db = SessionLocal()
                     failed_emails = db.query(EmailLogs).filter(EmailLogs.status == "failed").all()
                     db.close()

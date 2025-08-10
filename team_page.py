@@ -581,8 +581,132 @@ def show_team_page(go_to):
                         st.warning("Please select at least one FTA to reassign.")
 
         # --- Admin Dashboard Section ---
-        st.subheader("📬 Email Logs")
+        # st.subheader("📬 Email Logs")
     
+        # try:
+        #     logs_df = get_email_logs()
+        
+        #     if logs_df.empty:
+        #         st.info("No email logs found.")
+        #     else:
+        #         logs_df["timestamp"] = pd.to_datetime(logs_df["timestamp"])
+
+        #         col1, col2 = st.columns([3, 1])
+        #         with col1:
+        #             st.write("")
+
+        #         with col2:
+        #             with st.expander("🔍 Filter Logs"):
+        #                 status_filter = st.multiselect("Status", logs_df["status"].unique())
+        #                 date_range = st.date_input("Date range", [])
+        
+        #         filtered_df = logs_df.copy()
+        
+        #         if status_filter:
+        #             filtered_df = filtered_df[filtered_df["status"].isin(status_filter)]
+        
+        #         if len(date_range) == 2:
+        #             start, end = pd.to_datetime(date_range[0]), pd.to_datetime(date_range[1])
+        #             filtered_df = filtered_df[
+        #                 (filtered_df["timestamp"] >= start) & (filtered_df["timestamp"] <= end)
+        #             ]
+        
+        #         total_emails = len(filtered_df)
+        #         successful = (filtered_df["status"] == "sent").sum()
+        #         failed = (filtered_df["status"] == "failed").sum()
+        
+        #         # Define styles
+        #         card_style = """
+        #             <style>
+        #             .card-container {
+        #                 display: flex;
+        #                 justify-content: space-between;
+        #                 gap: 20px;
+        #             }
+        #             .card {
+        #                 flex: 1;
+        #                 padding: 20px;
+        #                 border-radius: 12px;
+        #                 color: white;
+        #                 font-family: Arial, sans-serif;
+        #                 box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
+        #                 display: flex;
+        #                 flex-direction: column;
+        #                 justify-content: space-between;
+        #                 min-height: 120px;
+        #             }
+        #             .card-red {
+        #                 background-color: #a00000;
+        #             }
+        #             .card-yellow {
+        #                 background-color: #ffe640;
+        #                 color: black;
+        #             }
+        #             .card-icon {
+        #                 display: flex;
+        #                 justify-content: space-between;
+        #                 align-items: center;
+        #                 font-size: 14px;
+        #                 font-weight: 500;
+        #             }
+        #             .card-value {
+        #                 font-size: 32px;
+        #                 font-weight: bold;
+        #                 margin-top: 5px;
+        #             }
+        #             </style>
+        #         """
+        
+        #         card_html = f"""
+        #         <div class="card-container">
+        #             <div class="card card-red">
+        #                 <div class="card-icon">Total Emails<span>📅</span></div>
+        #                 <div class="card-value">{total_emails}</div>
+        #             </div>
+        #             <div class="card card-yellow">
+        #                 <div class="card-icon">Successful<span>✆✉</span></div>
+        #                 <div class="card-value">{successful}</div>
+        #             </div>
+        #             <div class="card card-red">
+        #                 <div class="card-icon">Failed<span>👎</span></div>
+        #                 <div class="card-value">{failed}</div>
+        #             </div>
+        #         </div>
+        #         """
+        
+        #         st.markdown(card_style, unsafe_allow_html=True)
+        #         st.markdown(card_html, unsafe_allow_html=True)
+        #         st.write("")
+        #         st.write("")
+        #         st.dataframe(filtered_df.sort_values("timestamp", ascending=False), use_container_width=True)
+
+        #         # --- UI Buttons ---
+        #         col1, col2, col3 = st.columns(3)
+                
+        #         with col1:
+        #             if st.button("🗑️ Delete all Failed Email Logs"):
+        #                 delete_failed_email_logs()
+        #                 st.success("All failed email logs deleted.")
+        #                 st.rerun()
+                
+        #         with col2:
+        #             if st.button("🚨 Reset Email Logs"):
+        #                 clear_email_logs()
+        #                 st.success("All email logs cleared.")
+        #                 st.rerun()
+                
+        #         with col3:
+        #             if st.button("📧 Resend Failed Emails"):
+        #                 resend_failed_emails()
+        #                 st.rerun()
+
+                        
+        # except Exception as e:
+        #     st.error(f"Failed to load email logs: {e}")
+
+        # --- Show Email Logs ---
+        st.subheader("📬 Email Logs")
+        
         try:
             logs_df = get_email_logs()
         
@@ -590,18 +714,15 @@ def show_team_page(go_to):
                 st.info("No email logs found.")
             else:
                 logs_df["timestamp"] = pd.to_datetime(logs_df["timestamp"])
-
+        
+                # Filters
                 col1, col2 = st.columns([3, 1])
-                with col1:
-                    st.write("")
-
                 with col2:
                     with st.expander("🔍 Filter Logs"):
                         status_filter = st.multiselect("Status", logs_df["status"].unique())
                         date_range = st.date_input("Date range", [])
         
                 filtered_df = logs_df.copy()
-        
                 if status_filter:
                     filtered_df = filtered_df[filtered_df["status"].isin(status_filter)]
         
@@ -615,131 +736,67 @@ def show_team_page(go_to):
                 successful = (filtered_df["status"] == "sent").sum()
                 failed = (filtered_df["status"] == "failed").sum()
         
-                # Define styles
-                card_style = """
-                    <style>
-                    .card-container {
-                        display: flex;
-                        justify-content: space-between;
-                        gap: 20px;
-                    }
-                    .card {
-                        flex: 1;
-                        padding: 20px;
-                        border-radius: 12px;
-                        color: white;
-                        font-family: Arial, sans-serif;
-                        box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: space-between;
-                        min-height: 120px;
-                    }
-                    .card-red {
-                        background-color: #a00000;
-                    }
-                    .card-yellow {
-                        background-color: #ffe640;
-                        color: black;
-                    }
-                    .card-icon {
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        font-size: 14px;
-                        font-weight: 500;
-                    }
-                    .card-value {
-                        font-size: 32px;
-                        font-weight: bold;
-                        margin-top: 5px;
-                    }
-                    </style>
-                """
-        
-                card_html = f"""
-                <div class="card-container">
-                    <div class="card card-red">
-                        <div class="card-icon">Total Emails<span>📅</span></div>
-                        <div class="card-value">{total_emails}</div>
-                    </div>
-                    <div class="card card-yellow">
-                        <div class="card-icon">Successful<span>✆✉</span></div>
-                        <div class="card-value">{successful}</div>
-                    </div>
-                    <div class="card card-red">
-                        <div class="card-icon">Failed<span>👎</span></div>
-                        <div class="card-value">{failed}</div>
-                    </div>
-                </div>
-                """
-        
+                # Display summary cards
+                card_style = """<style>/* your CSS here */</style>"""  # keep your existing CSS
                 st.markdown(card_style, unsafe_allow_html=True)
-                st.markdown(card_html, unsafe_allow_html=True)
-                st.write("")
+                st.markdown(f"""
+                <div class="card-container">
+                    <div class="card card-red"><div class="card-icon">Total Emails<span>📅</span></div><div class="card-value">{total_emails}</div></div>
+                    <div class="card card-yellow"><div class="card-icon">Successful<span>✆✉</span></div><div class="card-value">{successful}</div></div>
+                    <div class="card card-red"><div class="card-icon">Failed<span>👎</span></div><div class="card-value">{failed}</div></div>
+                </div>
+                """, unsafe_allow_html=True)
+        
                 st.write("")
                 st.dataframe(filtered_df.sort_values("timestamp", ascending=False), use_container_width=True)
-
+        
+                # --- Select specific failed emails ---
+                failed_df = filtered_df[filtered_df["status"] == "failed"]
+        
+                if not failed_df.empty:
+                    selected_failed = st.multiselect(
+                        "Select failed emails to resend:",
+                        failed_df["email"].tolist(),
+                        format_func=lambda x: f"{x} (Error: {failed_df.loc[failed_df['email'] == x, 'error_message'].values[0]})"
+                    )
+                else:
+                    selected_failed = []
+        
                 # --- UI Buttons ---
                 col1, col2, col3 = st.columns(3)
-                
+        
                 with col1:
                     if st.button("🗑️ Delete all Failed Email Logs"):
                         delete_failed_email_logs()
                         st.success("All failed email logs deleted.")
                         st.rerun()
-                
+        
                 with col2:
                     if st.button("🚨 Reset Email Logs"):
                         clear_email_logs()
                         st.success("All email logs cleared.")
                         st.rerun()
-                
+        
                 with col3:
-                    # if st.button("📧 Resend Failed Emails"):
-                    #     resend_failed_emails()
-                    #     st.rerun()
-                    # Step 1: Fetch failed emails from DB
-                    from sqlalchemy import create_engine
-                    from sqlalchemy.orm import sessionmaker
-                    
-                    DATABASE_URL = "sqlite:///path_to_your_db.db"
-                    
-                    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-                    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-                    db = SessionLocal()
-                    failed_emails = db.query(EmailLogs).filter(EmailLogs.status == "failed").all()
-                    db.close()
-                    
-                    # Step 2: Display with checkboxes
-                    st.subheader("📧 Resend Failed Emails")
-                    selected_ids = []
-                    for log in failed_emails:
-                        if st.checkbox(f"{log.fta_name} - {log.email} ({log.error_message})", key=log.id):
-                            selected_ids.append(log.id)
-                    
-                    # Step 3: Add resend button
-                    if st.button("🔄 Resend Selected Emails"):
-                        db = SessionLocal()
-                        for log_id in selected_ids:
-                            log_entry = db.query(EmailLogs).filter_by(id=log_id).first()
-                            if log_entry:
-                                success, subject = send_email(log_entry.email, log_entry.fta_name)
-                                if success:
-                                    log_entry.status = "sent"
-                                    log_entry.error_message = None
-                                else:
-                                    log_entry.status = "failed"
-                                    log_entry.error_message = "Resend failed"
-                            db.commit()
-                        db.close()
-                        st.success("Resend process completed.")
-                        st.rerun()
-
-                        
+                    if st.button("📧 Resend Selected Emails"):
+                        if selected_failed:
+                            with SessionLocal() as db:
+                                for email in selected_failed:
+                                    log_entry = db.query(EmailLogs).filter(EmailLogs.email == email, EmailLogs.status == "failed").first()
+                                    if log_entry:
+                                        success, subject = send_email(log_entry.email, log_entry.fta_name)
+                                        if success:
+                                            log_email_sent(log_entry.fta_id, log_entry.email, log_entry.fta_name, subject, "sent")
+                                        else:
+                                            log_email_sent(log_entry.fta_id, log_entry.email, log_entry.fta_name, None, "failed", "Retry failed")
+                            st.success(f"Retried {len(selected_failed)} failed emails.")
+                            st.rerun()
+                        else:
+                            st.warning("Please select at least one failed email to resend.")
         
         except Exception as e:
             st.error(f"Failed to load email logs: {e}")
+
     
     #     # Delete A-Team member
     #     st.subheader("Delete A-Team Member")

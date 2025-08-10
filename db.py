@@ -70,12 +70,41 @@ def reset_password(email, new_password):
 def send_email(receiver_email, fta_name):
     subject = "Welcome to The Standpoint Church – We're Glad You Came!"
     body = f"""
-    <html><body>
+    <html>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
         <p>Dear {fta_name},</p>
-        <p>We’re truly honored that you chose to worship with us at <strong>The Standpoint Church</strong>.</p>
-        <p>...</p>
-        <p><strong>The A-Team</strong><br><em>For Dr. Phil Ransom-Bello</em></p>
-    </body></html>
+    
+        <p>
+          We’re truly honored that you chose to worship with us at <strong>The Standpoint Church</strong>.
+          On behalf of our Senior Pastor, <strong>Dr. Phil Ransom-Bello</strong>, and the entire Standpoint family,
+          we want to say a big <strong>THANK YOU</strong> for fellowshipping with us!
+        </p>
+    
+        <p>
+          We believe that your presence is not by chance but part of God’s divine orchestration,
+          and we are excited about all that God has in store for you from here.
+        </p>
+    
+        <p>
+          Whether this was your first time or you’ve visited before, please know that you're
+          <strong>seen, valued, and loved</strong>. Our prayer is that you find purpose, truth, and transformation
+          as you continue to encounter God's Word in this house.
+        </p>
+    
+        <p>
+          We look forward to seeing you again, growing together, and walking this journey of faith alongside you.
+        </p>
+    
+        <br>
+    
+        <p style="margin-top: 30px;">
+          With love and honor,<br>
+          <strong>The A-Team</strong><br>
+          <em>For Dr. Phil Ransom-Bello</em><br>
+          <em>Lead Pastor, The Standpoint Church</em>
+        </p>
+      </body>
+    </html>
     """
     message = MIMEMultipart("alternative")
     message["Subject"] = subject

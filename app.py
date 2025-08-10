@@ -4,30 +4,29 @@ from dashboard_page import show_dashboard_page
 from fta_page import show_fta_page
 from team_page import show_team_page
 from fta_tracking import show_feedback_tracking_page
+from models import User, ATeamMember
+
+from db_session import init_db
 from db import (
-    create_users_table,
-    init_assignment_tables,
     sync_and_assign_fta_responses,
     get_existing_assignments,
-    create_feedback_table,
-    create_email_log_table,
+    sync_a_team_members,
 )
 
 # === CONFIG ===
 st.set_page_config(
     page_title="FTA Management",
     layout="wide",
-    page_icon="assets/tsp-logo.png"  # path to your favicon
+    page_icon="assets/tsp-logo.png"
 )
 
 try:
-    GSHEET_URL = st.secrets["secrets"]["gsheet_url"]
+    # === Setup DB (create all tables using SQLAlchemy) ===
+    init_db()
+    sync_a_team_members()
 
-    # === Setup DB (create tables if not exist) FIRST! ===
-    create_users_table()
-    create_feedback_table()
-    create_email_log_table()
-    init_assignment_tables()
+    # GSHEET_URL = st.secrets["secrets"]["gsheet_url"]
+    GSHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_WrzZX-4UkjBaoqhdRPmnac6o5zoIdtxOJbQTvwrElkSKroAefYbsNB_8vnaYQHFvGx9rwQvwgept/pub?gid=1415738383&single=true&output=csv"
 
     # === Load session data once ===
     if "fta_data" not in st.session_state:
@@ -104,5 +103,4 @@ try:
 
 except Exception as e:
     st.error("😢 **Something went wrong while trying to connect to the internet or initialize the app.**\n\nPlease check your connection and try again.")
-    st.exception(e)  # Optional: show the actual error below for debugging
-
+    st.exception(e)

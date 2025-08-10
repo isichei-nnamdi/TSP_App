@@ -1,13 +1,71 @@
 import streamlit as st
-from db import create_users_table, authenticate_user, add_user, reset_password, get_user_role
+from db_session import get_session
+from models import User, ATeamMember
+from sqlalchemy.exc import IntegrityError
+from werkzeug.security import generate_password_hash, check_password_hash
+
+
+def authenticate_user(email, password, session):
+    user = session.query(User).filter_by(email=email).first()
+    if user and check_password_hash(user.password, password):
+        return True
+    return False
+
+
+# def add_user(email, password, role, session):
+#     try:
+#         hashed_password = generate_password_hash(password)
+#         new_user = User(email=email, password=hashed_password, role=role)
+#         session.add(new_user)
+#         session.commit()
+#         return True
+#     except IntegrityError:
+#         session.rollback()
+#         return False
+def add_user(email, password, role, session):
+    try:
+        hashed_password = generate_password_hash(password)
+        new_user = User(email=email, password=hashed_password, role=role)
+        session.add(new_user)
+
+        # ✅ If user is an A-Team member, add them to the a_team_members table
+        if role == "A-Team":
+            exists = session.query(ATeamMember).filter_by(email=email).first()
+            if not exists:
+                # Extract full name from email if not provided
+                full_name = email.split("@")[0].replace(".", " ").title()
+                session.add(ATeamMember(email=email, full_name=full_name))
+
+        session.commit()
+        return True
+    except IntegrityError:
+        session.rollback()
+        return False
+
+
+def reset_password(email, new_password, session):
+    user = session.query(User).filter_by(email=email).first()
+    if user:
+        user.password = generate_password_hash(new_password)
+        session.commit()
+        return True
+    return False
+
+
+def get_user_role(email, session):
+    user = session.query(User).filter_by(email=email).first()
+    return user.role if user else None
+
 
 def show_login_page(go_to):
-    # Create DB table if not exist
-    create_users_table()
+    session = get_session()
 
     # Load domain & admin config from secrets
-    approved_domains = st.secrets["secrets"]["approved_domains"]
-    admin_emails = st.secrets["secrets"]["admin_emails"]
+    # approved_domains = st.secrets["secrets"]["approved_domains"]
+    # admin_emails = st.secrets["secrets"]["admin_emails"]
+
+    approved_domains = ["tspchurch.com"]
+    admin_emails = ["dorcas@tspchurch.com", "admin@tspchurch.com"]
 
     # === LAYOUT ===
     left_col, right_col = st.columns([1, 1.5])
@@ -30,9 +88,9 @@ def show_login_page(go_to):
                     domain = email.split("@")[-1]
                     if domain not in approved_domains:
                         st.error("Unauthorized domain. Please use an approved email address.")
-                    elif authenticate_user(email, password):
+                    elif authenticate_user(email, password, session):
                         st.session_state["email"] = email
-                        st.session_state["role"] = get_user_role(email)
+                        st.session_state["role"] = get_user_role(email, session)
                         st.success("Login successful. Redirecting...")
                         go_to("dashboard")
                     else:
@@ -48,12 +106,11 @@ def show_login_page(go_to):
                     st.error("Invalid email format.")
                 else:
                     domain = new_email.split("@")[-1]
-                    # Admins must be pre-approved
                     if role == "Admin" and new_email not in admin_emails:
                         st.error("This email is not authorized to register as Admin.")
                     elif domain not in approved_domains:
                         st.error("Unauthorized domain. Use an approved email address.")
-                    elif add_user(new_email, new_password, role):
+                    elif add_user(new_email, new_password, role, session):
                         st.success("User registered successfully.")
                     else:
                         st.error("Email already exists.")
@@ -64,8 +121,10 @@ def show_login_page(go_to):
             new_pass = st.text_input("New Password", type="password", key="reset_pass")
             if st.button("Reset Password"):
                 if reset_email.strip():
-                    reset_password(reset_email, new_pass)
-                    st.success("Password reset successfully.")
+                    if reset_password(reset_email, new_pass, session):
+                        st.success("Password reset successfully.")
+                    else:
+                        st.error("Email not found.")
                 else:
                     st.error("Please provide a valid email address.")
 

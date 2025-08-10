@@ -1,3 +1,4 @@
+import streamlit as st
 import smtplib
 from email.message import EmailMessage
 

@@ -1,10 +1,18 @@
 import streamlit as st
 import pandas as pd
-import sqlite3
+# import sqlite3
 import plotly.graph_objects as go
 from datetime import datetime
 from db import get_all_a_team_members, add_a_team_member, get_email_logs, clear_email_logs, delete_failed_email_logs
 from reset_db import reset_database
+import os
+from sqlalchemy import select
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from models import FtaAssignments, ATeamMember, Feedback
+from sqlalchemy import func
+from db_session import get_session
+
 
 # ---------------------------------------------------------------------
 #  TEAM PAGE  ── Filters: Date range  +  A‑Team member  +  Reset button
@@ -17,17 +25,25 @@ def show_team_page(go_to):
         st.error("You are not authorized to view this page.")
         st.stop()
 
-    import os
-
-    DB_PATH = os.path.join(os.path.dirname(__file__), 'fta.db')
-    # db_file = "fta.db"
-    st.write("Database path:", os.path.abspath(DB_PATH))
-    # Path to your database
-    # db_path = "/mount/src/tsp_app/fta.db"
     
+
+    # Absolute path to the database file
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DB_FILE = os.path.join(BASE_DIR, "database", "fta.db")
+
+    # Create the database folder if it doesn’t exist
+    os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
+
+    # SQLAlchemy connection string
+    DB_PATH = f"sqlite:///{DB_FILE}"
+    engine = create_engine(DB_PATH, connect_args={"check_same_thread": False})
+
+    # Create session factory
+    Session = sessionmaker(bind=engine)
+    session = Session()
     
     # # Read the file in binary mode
-    # with open(db_path, "rb") as f:
+    # with open(DB_PATH, "rb") as f:
     #     db_bytes = f.read()
     
     # # Provide download button in the app
@@ -63,17 +79,17 @@ def show_team_page(go_to):
         # === Load members
         members_df = get_all_a_team_members()
 
-        # === Display editable table ===
-        DB_PATH = "fta.db"
-
         # === Load FTA count
-        conn = sqlite3.connect(DB_PATH)
-        fta_counts = pd.read_sql_query("""
-            SELECT assigned_to as email, COUNT(*) as fta_count 
-            FROM fta_assignments 
-            GROUP BY assigned_to
-        """, conn)
-        conn.close()
+        fta_count = (
+            session.query(
+                FtaAssignments.assigned_to.label("email"),
+                func.count(FtaAssignments.id).label("fta_count")
+            )
+            .group_by(FtaAssignments.assigned_to)
+            .all()
+        )
+        fta_counts = pd.DataFrame(fta_count, columns=["email", "fta_count"])
+        assignments_df = pd.read_sql(select(FtaAssignments), session.bind)
 
         # Merge carefully
         members_df = pd.merge(members_df, fta_counts, on="email", how="left")
@@ -86,26 +102,22 @@ def show_team_page(go_to):
             lambda row: search in row["email"].lower() or search in row["full_name"].lower(), axis=1
         )] if search else members_df
 
-    # with col3:
-    #     if st.button("Reset Database"):
-    #         reset_database()
-    #         st.success("✅ Database has been reset successfully.")
-
     # --- Load members and assignments ---
-    with sqlite3.connect(DB_PATH) as conn:
-        members_df = pd.read_sql_query("SELECT * FROM a_team_members", conn)
-        assignments_df = pd.read_sql_query("SELECT * FROM fta_assignments", conn)
-        all_feedback = pd.read_sql_query("SELECT * FROM fta_feedback", conn)
+    assignments_df = pd.read_sql(select(FtaAssignments), session.bind)
+    all_feedback = pd.read_sql(select(Feedback), session.bind)
 
-    if not all_feedback.empty:
+    
+    if all_feedback.empty:
+        print("✅ No feedback has been submitted yet.")
+        contacted_ids = []
+    else:
         all_feedback["submitted_at"] = pd.to_datetime(all_feedback["submitted_at"], errors="coerce")
         all_feedback["Feedback_id"] = all_feedback["fta_id"] + " - " + all_feedback["call_type"]
+        contacted_ids = all_feedback["fta_id"].unique()
 
-    contacted_ids = all_feedback["fta_id"].unique()
 
     st.markdown("---")
 
-    # st.write(assignments_df)
     st.markdown("##### Summary of Assigned & Contacted Calls")
 
     col1, col2, col3, col4 = st.columns([2, 1, 1, 1.5])
@@ -113,8 +125,13 @@ def show_team_page(go_to):
         st.write("")
     with col2:
         # Ensure assigned_at column is datetime
+        # Store as string
+        min_date_str = "01/01/2025"
+        
         assignments_df["assigned_at"] = pd.to_datetime(assignments_df["assigned_at"], errors="coerce")
-        min_date = assignments_df["assigned_at"].min().date() if not assignments_df["assigned_at"].isna().all() else datetime.today().date()
+        # Convert to date object if needed
+        min_date = datetime.strptime(min_date_str, "%m/%d/%Y").date()
+        # min_date = assignments_df["assigned_at"].min().date() if not assignments_df["assigned_at"].isna().all() else datetime.today().date()
         max_date = datetime.today().date() # all_feedback["submitted_at"].max().date() if not all_feedback["submitted_at"].isna().all() else
         start_date = st.date_input("Start Date",
                                 value=min_date,
@@ -149,7 +166,11 @@ def show_team_page(go_to):
 
     for _, member in members_df.iterrows():
         email = member["email"]
-        full_name = member["full_name"]
+        if member.get("name"):
+            full_name = member["name"]
+        else:
+            full_name = email.split("@")[0].split(".")[0].capitalize()
+      
 
         # Get all assignments for the current member
         member_ftas = filtered_df[filtered_df["assigned_to"] == email]
@@ -159,14 +180,14 @@ def show_team_page(go_to):
 
         summary_data.append({
             "Email": email,
-            "Full Name": full_name,
+            "Name": full_name,
             "Total Assigned": total,
             "Contacted": contacted,
             "Not Contacted": not_contacted
         })
 
     # --- Convert to DataFrame and show ---
-    expected_cols = ["Email", "Full Name", "Total Assigned", "Contacted", "Not Contacted"]
+    expected_cols = ["Email", "Name", "Total Assigned", "Contacted", "Not Contacted"]
     summary_df = pd.DataFrame(summary_data)
 
     # Ensure DataFrame has the expected columns
@@ -258,7 +279,10 @@ def show_team_page(go_to):
         with col1:
             st.write("")
         with col2:
-            min_date = all_feedback["submitted_at"].min().date() if not all_feedback["submitted_at"].isna().all() else datetime.today().date()
+            # Store as string
+            min_date_str = "01/01/2025"
+            min_date = datetime.strptime(min_date_str, "%m/%d/%Y").date()
+            # min_date = all_feedback["submitted_at"].min().date() if not all_feedback["submitted_at"].isna().all() else datetime.today().date()
             max_date = datetime.today().date() # all_feedback["submitted_at"].max().date() if not all_feedback["submitted_at"].isna().all() else
             start_date = st.date_input("Start Date",
                                     value=min_date,
@@ -392,13 +416,26 @@ def show_team_page(go_to):
                 options=list(delete_options.keys())
             )
     
+            # if st.button("Delete Selected Feedback"):
+            #     if selected_labels:
+            #         selected_ids = [delete_options[label] for label in selected_labels]
+            #         with sqlite3.connect(DB_PATH) as conn:
+            #             cursor = conn.cursor()
+            #             cursor.executemany("DELETE FROM fta_feedback WHERE id = ?", [(fid,) for fid in selected_ids])
+            #             conn.commit()
+            #         st.success(f"Deleted {len(selected_ids)} feedback record(s).")
+            #         st.rerun()
+            #     else:
+            #         st.warning("No feedback selected.")
+
             if st.button("Delete Selected Feedback"):
                 if selected_labels:
                     selected_ids = [delete_options[label] for label in selected_labels]
-                    with sqlite3.connect(DB_PATH) as conn:
-                        cursor = conn.cursor()
-                        cursor.executemany("DELETE FROM fta_feedback WHERE id = ?", [(fid,) for fid in selected_ids])
-                        conn.commit()
+                    
+                    with get_session() as session:
+                        session.query(Feedback).filter(Feedback.id.in_(selected_ids)).delete(synchronize_session=False)
+                        session.commit()
+                    
                     st.success(f"Deleted {len(selected_ids)} feedback record(s).")
                     st.rerun()
                 else:
@@ -409,8 +446,11 @@ def show_team_page(go_to):
         st.markdown("##### 🔥 Delete Assigned FTAs")
     
         # === Load A-Team members for selection ===
-        with sqlite3.connect(DB_PATH) as conn:
-            a_team_df = pd.read_sql_query("SELECT email, full_name FROM a_team_members", conn)
+        # with sqlite3.connect(DB_PATH) as conn:
+        #     a_team_df = pd.read_sql_query("SELECT email, full_name FROM a_team_members", conn)
+        with get_session() as session:
+            a_team_data = session.query(ATeamMember.email, ATeamMember.full_name).all()
+            a_team_df = pd.DataFrame(a_team_data, columns=["email", "full_name"])
     
         if a_team_df.empty:
             st.warning("No A-Team members available.")
@@ -419,36 +459,74 @@ def show_team_page(go_to):
         selected_member = st.selectbox("Select A-Team Member", options=a_team_df["email"])
     
         # === Load assignments for that member ===
-        with sqlite3.connect(DB_PATH) as conn:
-            query = "SELECT * FROM fta_assignments WHERE assigned_to = ?"
-            member_assignments = pd.read_sql_query(query, conn, params=(selected_member,))
-    
+        # with sqlite3.connect(DB_PATH) as conn:
+        #     query = "SELECT * FROM fta_assignments WHERE assigned_to = ?"
+        #     member_assignments = pd.read_sql_query(query, conn, params=(selected_member,))
+
+        with get_session() as session:
+            assignments = (
+                session.query(FtaAssignments)
+                .filter(FtaAssignments.assigned_to == selected_member)
+                .all()
+            )
+            member_assignments = pd.DataFrame(
+                [a.__dict__ for a in assignments],
+                columns=[col.name for col in FtaAssignments.__table__.columns]
+            )
+            # Remove SQLAlchemy internal state column
+            if "_sa_instance_state" in member_assignments.columns:
+                member_assignments.drop(columns=["_sa_instance_state"], inplace=True)
+
         if not member_assignments.empty:
             st.write(f"Assigned FTAs for {selected_member}")
             st.dataframe(member_assignments, use_container_width=True)
-    
+
+           
             selected_ftas = st.multiselect(
                 "Select FTAs to delete:",
                 options=member_assignments["fta_id"],
-                format_func=lambda x: f"{x} - {member_assignments[member_assignments['fta_id'] == x]['full_name'].values[0]}"
+                format_func=lambda x: f"{x} - {member_assignments[member_assignments['fta_id'] == x]['name'].values[0]}"
             )
     
+            # if st.button("Delete Selected FTAs"):
+            #     with sqlite3.connect(DB_PATH) as conn:
+            #         cursor = conn.cursor()
+            #         for fta_id in selected_ftas:
+            #             cursor.execute("DELETE FROM fta_assignments WHERE fta_id = ?", (fta_id,))
+            #         conn.commit()
+            #     st.success(f"{len(selected_ftas)} FTA(s) deleted.")
+            #     st.rerun()
+
+
             if st.button("Delete Selected FTAs"):
-                with sqlite3.connect(DB_PATH) as conn:
-                    cursor = conn.cursor()
+                with get_session() as session:
                     for fta_id in selected_ftas:
-                        cursor.execute("DELETE FROM fta_assignments WHERE fta_id = ?", (fta_id,))
-                    conn.commit()
+                        session.query(FtaAssignments).filter(FtaAssignments.fta_id == fta_id).delete()
+                    session.commit()
+
                 st.success(f"{len(selected_ftas)} FTA(s) deleted.")
                 st.rerun()
+
         else:
             st.info(f"No FTAs assigned to {selected_member}.")
         
     
         st.markdown("##### 🔁 Reassign FTAs from One A-Team Member to Another")
-        with sqlite3.connect(DB_PATH) as conn:
-            fta_options = pd.read_sql_query("SELECT fta_id, full_name, assigned_to FROM fta_assignments", conn)
-            members_df = pd.read_sql_query("SELECT email FROM a_team_members", conn)
+        # with sqlite3.connect(DB_PATH) as conn:
+        #     fta_options = pd.read_sql_query("SELECT fta_id, full_name, assigned_to FROM fta_assignments", conn)
+        #     members_df = pd.read_sql_query("SELECT email FROM a_team_members", conn)
+        with get_session() as session:
+            # Query FTA assignments
+            fta_data = session.query(
+                FtaAssignments.fta_id,
+                FtaAssignments.name,
+                FtaAssignments.assigned_to
+            ).all()
+            fta_options = pd.DataFrame(fta_data, columns=["fta_id", "full_name", "assigned_to"])
+
+            # Query A-Team members' emails
+            members_data = session.query(ATeamMember.email).all()
+            members_df = pd.DataFrame(members_data, columns=["email"])
     
         if not fta_options.empty and not members_df.empty:
             all_emails = members_df["email"].tolist()
@@ -475,20 +553,33 @@ def show_team_page(go_to):
     
                 # === Button to trigger reassignment ===
                 if st.button("Reassign Selected FTAs"):
+                    # if selected_ftas:
+                    #     with sqlite3.connect(DB_PATH) as conn:
+                    #         cursor = conn.cursor()
+                    #         for fta_id in selected_ftas:
+                    #             cursor.execute(
+                    #                 "UPDATE fta_assignments SET assigned_to = ?, assigned_at = ? WHERE fta_id = ?",
+                    #                 (new_member, datetime.now().isoformat(), fta_id)
+                    #             )
+                    #         conn.commit()
+                    #     st.success(f"{len(selected_ftas)} FTA(s) reassigned from {selected_source_member} to {new_member}.")
+                    #     st.rerun()
+                    # else:
+                    #     st.warning("Please select at least one FTA to reassign.")
                     if selected_ftas:
-                        with sqlite3.connect(DB_PATH) as conn:
-                            cursor = conn.cursor()
+                        with get_session() as session:
                             for fta_id in selected_ftas:
-                                cursor.execute(
-                                    "UPDATE fta_assignments SET assigned_to = ?, assigned_at = ? WHERE fta_id = ?",
-                                    (new_member, datetime.now().isoformat(), fta_id)
-                                )
-                            conn.commit()
+                                assignment = session.query(FtaAssignments).filter_by(fta_id=fta_id).first()
+                                if assignment:
+                                    assignment.assigned_to = new_member
+                                    assignment.assigned_at = datetime.now().isoformat()
+                            session.commit()
+
                         st.success(f"{len(selected_ftas)} FTA(s) reassigned from {selected_source_member} to {new_member}.")
                         st.rerun()
                     else:
                         st.warning("Please select at least one FTA to reassign.")
-        
+
         # --- Admin Dashboard Section ---
         st.subheader("📬 Email Logs")
     
@@ -604,5 +695,36 @@ def show_team_page(go_to):
         
         except Exception as e:
             st.error(f"Failed to load email logs: {e}")
+    
+    #     # Delete A-Team member
+    #     st.subheader("Delete A-Team Member")
+
+    #    # Fetch all members
+    #     members = session.query(ATeamMember).all()
+
+    #     if members:
+    #         member_data = [
+    #             {"Full Name": m.full_name, "Email": m.email}
+    #             for m in members
+    #         ]
+    #         df_members = pd.DataFrame(member_data)
+    #         st.dataframe(df_members)
+
+    #         # build list for selection (you probably already have df_members)
+    #         member_options = df_members["Email"].tolist()  # or build from session query
+
+    #         selected_member_email = st.selectbox("Select member to delete", member_options)
+
+    #         if st.button("Delete Selected Member"):
+    #             # optionally strip whitespace
+    #             email_to_delete = selected_member_email.strip()
+
+    #             with get_session() as session:
+    #                 session.query(ATeamMember).filter(ATeamMember.email == email_to_delete).delete(synchronize_session=False)
+    #                 session.commit()
+
+    #             st.success(f"Member '{email_to_delete}' deleted.")
+    #             st.rerun()
+
     except Exception as e:
         st.warning("⚠️ No feedback data available at the moment.")

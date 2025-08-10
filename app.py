@@ -25,8 +25,7 @@ try:
     init_db()
     sync_a_team_members()
 
-    # GSHEET_URL = st.secrets["secrets"]["gsheet_url"]
-    GSHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR_WrzZX-4UkjBaoqhdRPmnac6o5zoIdtxOJbQTvwrElkSKroAefYbsNB_8vnaYQHFvGx9rwQvwgept/pub?gid=1415738383&single=true&output=csv"
+    GSHEET_URL = st.secrets["secrets"]["gsheet_url"]
 
     # === Load session data once ===
     if "fta_data" not in st.session_state:

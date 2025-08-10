@@ -696,9 +696,39 @@ def show_team_page(go_to):
                         st.rerun()
                 
                 with col3:
-                    if st.button("📧 Resend Failed Emails"):
-                        resend_failed_emails()
+                    # if st.button("📧 Resend Failed Emails"):
+                    #     resend_failed_emails()
+                    #     st.rerun()
+                    # Step 1: Fetch failed emails from DB
+                    db = SessionLocal()
+                    failed_emails = db.query(EmailLogs).filter(EmailLogs.status == "failed").all()
+                    db.close()
+                    
+                    # Step 2: Display with checkboxes
+                    st.subheader("📧 Resend Failed Emails")
+                    selected_ids = []
+                    for log in failed_emails:
+                        if st.checkbox(f"{log.fta_name} - {log.email} ({log.error_message})", key=log.id):
+                            selected_ids.append(log.id)
+                    
+                    # Step 3: Add resend button
+                    if st.button("🔄 Resend Selected Emails"):
+                        db = SessionLocal()
+                        for log_id in selected_ids:
+                            log_entry = db.query(EmailLogs).filter_by(id=log_id).first()
+                            if log_entry:
+                                success, subject = send_email(log_entry.email, log_entry.fta_name)
+                                if success:
+                                    log_entry.status = "sent"
+                                    log_entry.error_message = None
+                                else:
+                                    log_entry.status = "failed"
+                                    log_entry.error_message = "Resend failed"
+                            db.commit()
+                        db.close()
+                        st.success("Resend process completed.")
                         st.rerun()
+
                         
         
         except Exception as e:

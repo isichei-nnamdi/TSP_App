@@ -170,25 +170,86 @@ def show_dashboard_page(go_to):
 
     st.markdown("---")
 
-    color_palette = ["#FEE440", "#8B0000", "#B0B0B0"]
+    # color_palette = ["#FEE440", "#8B0000", "#B0B0B0"]
+    # def assign_colors(data_dict, color_list):
+    #     sorted_items = sorted(data_dict.items(), key=lambda x: x[1], reverse=True)
+    #     return {k: color_list[i % len(color_list)] for i, (k, _) in enumerate(sorted_items)}
+
+    # def donut_chart(title, data_dict, color_dict):
+    #     labels, values = list(data_dict.keys()), list(data_dict.values())
+    #     total = sum(values)
+    #     fig = go.Figure([go.Pie(labels=labels, values=values, hole=0.75, marker=dict(colors=[color_dict[k] for k in labels]), textinfo='none')])
+    #     fig.update_layout(title=dict(text=title, x=0.1, font=dict(size=16)), showlegend=False, height=300, width=300)
+
+    #     col_chart, col_legend = st.columns([2, 1])
+    #     with col_chart:
+    #         st.plotly_chart(fig, use_container_width=True)
+    #     with col_legend:
+    #         for label in labels:
+    #             val, pct = data_dict[label], int((data_dict[label] / total) * 100)
+    #             st.markdown(f"<div><strong>{label}</strong> {val} ({pct}%)</div>", unsafe_allow_html=True)
+
+    # donut1, donut2, donut3 = st.columns(3)
+    # with donut1:
+    #     donut_chart("Like to be a Member?", member_intent, assign_colors(member_intent, color_palette))
+    # with donut2:
+    #     donut_chart("Invitees by Gender", gender, assign_colors(gender, color_palette))
+    # with donut3:
+    #     donut_chart("Invitees by Data Use Consent", mg_data, assign_colors(mg_data, color_palette))
+
+    color_palette = ["#FEE440", "#8B0000", "#B0B0B0", "#321F1F", "#CD0BC9"]
+
     def assign_colors(data_dict, color_list):
         sorted_items = sorted(data_dict.items(), key=lambda x: x[1], reverse=True)
         return {k: color_list[i % len(color_list)] for i, (k, _) in enumerate(sorted_items)}
-
+    
     def donut_chart(title, data_dict, color_dict):
         labels, values = list(data_dict.keys()), list(data_dict.values())
         total = sum(values)
-        fig = go.Figure([go.Pie(labels=labels, values=values, hole=0.75, marker=dict(colors=[color_dict[k] for k in labels]), textinfo='none')])
-        fig.update_layout(title=dict(text=title, x=0.1, font=dict(size=16)), showlegend=False, height=300, width=300)
-
+    
+        # Donut chart
+        fig = go.Figure([go.Pie(
+            labels=labels,
+            values=values,
+            hole=0.75,
+            marker=dict(colors=[color_dict[k] for k in labels]),
+            textinfo='none',
+            sort=False
+        )])
+    
+        fig.update_layout(
+            margin=dict(t=30, b=20, l=0, r=0),
+            title=dict(text=title, x=0.1, font=dict(size=16)),
+            showlegend=False,
+            height=300,
+            width=300,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+        )
+    
+        # Layout with chart on left and styled legend on right
         col_chart, col_legend = st.columns([2, 1])
         with col_chart:
             st.plotly_chart(fig, use_container_width=True)
         with col_legend:
+            st.write(" ")  # some spacing
             for label in labels:
-                val, pct = data_dict[label], int((data_dict[label] / total) * 100)
-                st.markdown(f"<div><strong>{label}</strong> {val} ({pct}%)</div>", unsafe_allow_html=True)
-
+                val = data_dict[label]
+                pct = int((val / total) * 100)
+                color = color_dict[label]
+    
+                st.markdown(f"""
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size:14px; margin-bottom:2px;">
+                        <strong>{label}</strong> {val} ({pct}%)
+                    </div>
+                    <div style="background-color:#e0e0e0; border-radius: 10px; height: 8px; width: 100%;">
+                        <div style="background-color:{color}; width:{pct}%; height:8px; border-radius:10px;"></div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    # Example usage in 3 columns
     donut1, donut2, donut3 = st.columns(3)
     with donut1:
         donut_chart("Like to be a Member?", member_intent, assign_colors(member_intent, color_palette))

@@ -30,7 +30,7 @@ def show_team_page(go_to):
     # Absolute path to the database file
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     DB_FILE = os.path.join(BASE_DIR, "database", "fta.db")
-    print(f"Using SQLite database at: {DB_FILE}")  # Debug: print actual path
+    st.write(f"Using SQLite database at: {DB_FILE}")  # Debug: print actual path
 
     # Create the database folder if it doesn’t exist
     os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
@@ -109,7 +109,7 @@ def show_team_page(go_to):
 
     
     if all_feedback.empty:
-        print("✅ No feedback has been submitted yet.")
+        st.write("✅ No feedback has been submitted yet.")
         contacted_ids = []
     else:
         all_feedback["submitted_at"] = pd.to_datetime(all_feedback["submitted_at"], errors="coerce")

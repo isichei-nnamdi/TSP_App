@@ -30,6 +30,7 @@ def show_team_page(go_to):
     # Absolute path to the database file
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     DB_FILE = os.path.join(BASE_DIR, "database", "fta.db")
+    print(f"Using SQLite database at: {DB_FILE}")  # Debug: print actual path
 
     # Create the database folder if it doesn’t exist
     os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
@@ -880,3 +881,12 @@ def show_team_page(go_to):
 
     except Exception as e:
         st.warning("⚠️ No feedback data available at the moment.")
+    # Provide download button in the app for the actual DB file
+    with open(DB_FILE, "rb") as f:
+        db_bytes = f.read()
+    st.download_button(
+        label="Download Current SQLite Database",
+        data=db_bytes,
+        file_name="fta.db",
+        mime="application/octet-stream"
+    )

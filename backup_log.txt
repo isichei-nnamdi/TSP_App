@@ -1,0 +1,11 @@
+2025-08-23 13:47:11.161591: Error: [WinError 32] The process cannot access the file because it is being used by another process
+2025-08-23 13:49:55.266240: Safely backed up database to C:\Users\hp\Documents\Datafied Files\TSP App\TSP_App\database\fta_backup.db
+2025-08-23 13:49:59.009403: Database backup committed and pushed to GitHub.
+2025-08-23 13:50:33.488001: Safely backed up database to C:\Users\hp\Documents\Datafied Files\TSP App\TSP_App\database\fta_backup.db
+2025-08-23 13:50:37.030848: Database backup committed and pushed to GitHub.
+2025-08-23 13:50:38.159088: Safely backed up database to C:\Users\hp\Documents\Datafied Files\TSP App\TSP_App\database\fta_backup.db
+2025-08-23 13:50:41.499026: Database backup committed and pushed to GitHub.
+2025-08-23 13:51:34.565946: Safely backed up database to C:\Users\hp\Documents\Datafied Files\TSP App\TSP_App\database\fta_backup.db
+2025-08-23 13:51:37.855202: Database backup committed and pushed to GitHub.
+2025-08-23 14:21:56.994327: Safely backed up database to C:\Users\hp\Documents\Datafied Files\TSP App\TSP_App\database\fta_backup.db
+2025-08-23 14:22:01.420828: Database backup committed and pushed to GitHub.

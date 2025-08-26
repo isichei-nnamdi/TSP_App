@@ -50,8 +50,17 @@ def log(msg):
     with open(LOG_FILE, "a") as f:
         f.write(f"{datetime.now()}: {msg}\n")
 
+print("Script started")  # Add this at the top
+
 def backup_database():
     try:
+        print("Checking database file...")
+        if not os.path.exists(DB_SOURCE):
+            log(f"Database file not found at {DB_SOURCE}")
+            print(f"Database file not found at {DB_SOURCE}")
+            return
+
+        print("Backing up database...")
         # Safely copy the live DB to the repo using SQLite's backup API
         src_conn = sqlite3.connect(DB_SOURCE)
         dest_conn = sqlite3.connect(DB_DEST)
@@ -60,15 +69,20 @@ def backup_database():
         src_conn.close()
         dest_conn.close()
         log(f"Safely backed up database to {DB_DEST}")
+        print(f"Safely backed up database to {DB_DEST}")
 
         os.chdir(REPO_PATH)
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print("Running git commands...")
         subprocess.run(["git", "add", "database/fta.db"], check=True)
         subprocess.run(["git", "commit", "-m", f"Backup DB at {timestamp}"], check=True)
         subprocess.run(["git", "push"], check=True)
         log("Database backup committed and pushed to GitHub.")
+        print("Database backup committed and pushed to GitHub.")
     except Exception as e:
         log(f"Error: {e}")
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
+    print("Calling backup_database()")
     backup_database()

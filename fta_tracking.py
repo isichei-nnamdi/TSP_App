@@ -51,7 +51,7 @@ def show_feedback_tracking_page(go_to):
 
     # Merge with response data to include phone numbers
     assigned_ftas = assigned_ftas.merge(
-        df_fta_response[["fta_id", "phone"]],
+        df_fta_response[["fta_id", "phone", "full_name"]],
         on="fta_id",
         how="left"
     )
@@ -77,6 +77,8 @@ def show_feedback_tracking_page(go_to):
 
     selected_fta = st.selectbox("Select FTA ID", options=available_ftas["fta_id"].tolist())
     phone_options = available_ftas[available_ftas["fta_id"] == selected_fta]["phone"].dropna().tolist()
+    name_options = available_ftas[available_ftas["fta_id"] == selected_fta]["full_name"].dropna().tolist()
+    st.selectbox("FTA Name", name_options)
     phone_selected_fta = st.selectbox("FTA Phone Number", options=phone_options if phone_options else ["No phone available"])
 
     call_success, feedback_1, met_date, mg_date, department = None, None, None, None, None

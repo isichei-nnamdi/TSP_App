@@ -96,10 +96,6 @@ def show_feedback_tracking_page(go_to):
         ])
         general_feedback = st.text_area("General Feedback on 1st call")
 
-    # Initialize variables to avoid UnboundLocalError
-    # met_date = None
-    # mg_date = None
-    # department = None
     elif call_type == "2nd call":
         met_date = st.date_input("Date you met your FTA")
         general_feedback = st.text_area("General Feedback on 2nd call")
@@ -132,8 +128,10 @@ def show_feedback_tracking_page(go_to):
             call_type=call_type,
             call_success=call_success,
             feedback_1=feedback_1,
-            met_date=met_date.isoformat() if met_date else None,
-            mg_date=mg_date.isoformat() if mg_date else None,
+            met_date=met_date if met_date else None,
+            mg_date=mg_date if mg_date else None,
+            # met_date=met_date.isoformat() if met_date else None,
+            # mg_date=mg_date.isoformat() if mg_date else None,
             department=department,
             general_feedback=general_feedback,
             submitted_at=datetime.now()

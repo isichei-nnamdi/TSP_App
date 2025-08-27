@@ -96,31 +96,80 @@ def show_feedback_tracking_page(go_to):
         ])
         general_feedback = st.text_area("General Feedback on 1st call")
 
+    # elif call_type == "2nd call":
+    #     met_date = st.date_input("Date you met your FTA")
+    #     general_feedback = st.text_area("General Feedback on 2nd call")
+
+    # elif call_type == "3rd call":
+    #     general_feedback = st.text_area("General Feedback on 3rd call")
+
+    # elif call_type == "M&G Attended":
+    #     mg_date = st.date_input("Date for M&G")
+    #     general_feedback = st.text_area("General Feedback on M&G Attended")
+
+    # elif call_type == "After Effect Confirmation":
+    #     department = st.selectbox("Department handed over to", [
+    #         "Audacity - Minister Gift", "Envagelism - Pastor Paul", "Warm Heart - Phillipa",
+    #         "Prayer - Pastor Paul", "Audio-visual & Photography - Lori",
+    #         "Giants & Pillars - Sarah Ozobu", "Social Media - Jeminine",
+    #         "Refinery - Pastor Chibuzor", "Media Projection - Joshua", "Potters - Solomon",
+    #         "Greeters - Rosemary", "Lawyers Club - Barrister Ahmed",
+    #         "Help Desk - Pastor Yemi", "Glamour House - Barrister Amaka",
+    #         "Couples Commiunity - Pastor Victor", "Ladies Community - Dorcas Smith",
+    #         "Gents Community - Peter Obasi", "Medical Community - Doctor Jane",
+    #         "Traffic - Mr. Emmanuel", "Transport - Francis Ozobu"
+    #     ])
+    #     general_feedback = st.text_area("General Feedback on Department Handover")
+
+    # if st.button("Submit Feedback"):
+    #     feedback = Feedback(
+    #         email=email,
+    #         fta_id=selected_fta,
+    #         call_type=call_type,
+    #         call_success=call_success,
+    #         feedback_1=feedback_1,
+    #         met_date=met_date.isoformat() if met_date else None,
+    #         mg_date=mg_date.isoformat() if mg_date else None,
+    #         department=department,
+    #         general_feedback=general_feedback,
+    #         submitted_at=datetime.now()
+    #     )
+    #     session.add(feedback)
+    #     session.commit()
+
+    #     st.success("✅ Feedback submitted successfully!")
+    #     st.rerun()
+
+    # Initialize variables to avoid UnboundLocalError
+    met_date = None
+    mg_date = None
+    department = None
+    
     elif call_type == "2nd call":
         met_date = st.date_input("Date you met your FTA")
         general_feedback = st.text_area("General Feedback on 2nd call")
-
+    
     elif call_type == "3rd call":
         general_feedback = st.text_area("General Feedback on 3rd call")
-
+    
     elif call_type == "M&G Attended":
         mg_date = st.date_input("Date for M&G")
         general_feedback = st.text_area("General Feedback on M&G Attended")
-
+    
     elif call_type == "After Effect Confirmation":
         department = st.selectbox("Department handed over to", [
-            "Audacity - Minister Gift", "Envagelism - Pastor Paul", "Warm Heart - Phillipa",
+            "Audacity - Minister Gift", "Evangelism - Pastor Paul", "Warm Heart - Phillipa",
             "Prayer - Pastor Paul", "Audio-visual & Photography - Lori",
             "Giants & Pillars - Sarah Ozobu", "Social Media - Jeminine",
             "Refinery - Pastor Chibuzor", "Media Projection - Joshua", "Potters - Solomon",
             "Greeters - Rosemary", "Lawyers Club - Barrister Ahmed",
             "Help Desk - Pastor Yemi", "Glamour House - Barrister Amaka",
-            "Couples Commiunity - Pastor Victor", "Ladies Community - Dorcas Smith",
+            "Couples Community - Pastor Victor", "Ladies Community - Dorcas Smith",
             "Gents Community - Peter Obasi", "Medical Community - Doctor Jane",
             "Traffic - Mr. Emmanuel", "Transport - Francis Ozobu"
         ])
         general_feedback = st.text_area("General Feedback on Department Handover")
-
+    
     if st.button("Submit Feedback"):
         feedback = Feedback(
             email=email,
@@ -136,9 +185,10 @@ def show_feedback_tracking_page(go_to):
         )
         session.add(feedback)
         session.commit()
-
+    
         st.success("✅ Feedback submitted successfully!")
         st.rerun()
+
 
     st.markdown("---")
     st.subheader("📜 Contact History")

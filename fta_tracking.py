@@ -78,11 +78,32 @@ def show_feedback_tracking_page(go_to):
                 st.info(f"✅ All FTAs have already received '{call_type}' feedback.")
                 st.stop()
         
+            # selected_fta = st.selectbox("Select FTA ID", options=available_ftas["fta_id"].tolist())
+            # phone_options = available_ftas[available_ftas["fta_id"] == selected_fta]["phone"].dropna().tolist()
+            # name_options = available_ftas[available_ftas["fta_id"] == selected_fta]["full_name"].dropna().tolist()
+            # st.selectbox("FTA Name", name_options)
+            # phone_selected_fta = st.selectbox("FTA Phone Number", options=phone_options if phone_options else ["No phone available"])
+            # Dropdown for selecting FTA ID
             selected_fta = st.selectbox("Select FTA ID", options=available_ftas["fta_id"].tolist())
-            phone_options = available_ftas[available_ftas["fta_id"] == selected_fta]["phone"].dropna().tolist()
-            name_options = available_ftas[available_ftas["fta_id"] == selected_fta]["full_name"].dropna().tolist()
-            st.selectbox("FTA Name", name_options)
-            phone_selected_fta = st.selectbox("FTA Phone Number", options=phone_options if phone_options else ["No phone available"])
+            
+            # Get the selected FTA details
+            fta_details = available_ftas[available_ftas["fta_id"] == selected_fta]
+            
+            if not fta_details.empty:
+                fta_name = fta_details["full_name"].iloc[0]
+                fta_phone = fta_details["phone"].iloc[0]
+            
+                # Display the FTA information nicely
+                st.markdown(
+                    f"""
+                    **Selected FTA:** {selected_fta}  
+                    **Name:** {fta_name}  
+                    **Phone:** {fta_phone}
+                    """
+                )
+            else:
+                st.warning("No details found for the selected FTA.")
+
         
             call_success, feedback_1, met_date, mg_date, department = None, None, None, None, None
             general_feedback = ""

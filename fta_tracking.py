@@ -22,10 +22,6 @@ engine = create_engine(DB_PATH, connect_args={"check_same_thread": False})
 # Create session factory
 Session = sessionmaker(bind=engine)
 
-# DB_PATH = os.path.join(os.path.dirname(__file__), 'fta.db')
-# engine = create_engine(f"sqlite:///{DB_PATH}", connect_args={"check_same_thread": False})
-# Session = sessionmaker(bind=engine)
-
 def show_feedback_tracking_page(go_to):
     df_fta_response = st.session_state["fta_data"]
     col1, col2, col3 = st.columns([1, 3, 1])
@@ -78,12 +74,6 @@ def show_feedback_tracking_page(go_to):
                 st.info(f"✅ All FTAs have already received '{call_type}' feedback.")
                 st.stop()
         
-            # selected_fta = st.selectbox("Select FTA ID", options=available_ftas["fta_id"].tolist())
-            # phone_options = available_ftas[available_ftas["fta_id"] == selected_fta]["phone"].dropna().tolist()
-            # name_options = available_ftas[available_ftas["fta_id"] == selected_fta]["full_name"].dropna().tolist()
-            # st.selectbox("FTA Name", name_options)
-            # phone_selected_fta = st.selectbox("FTA Phone Number", options=phone_options if phone_options else ["No phone available"])
-            # Dropdown for selecting FTA ID
             selected_fta = st.selectbox("Select FTA ID", options=available_ftas["fta_id"].tolist())
             
             # Get the selected FTA details
@@ -103,15 +93,6 @@ def show_feedback_tracking_page(go_to):
                 )
             else:
                 st.warning("No details found for the selected FTA.")
-
-            # --- Helper function to reset all form fields ---
-            # def reset_inputs():
-            #     st.session_state.call_success = ""
-            #     st.session_state.feedback_1 = ""
-            #     st.session_state.general_feedback = ""
-            #     st.session_state.met_date = None
-            #     st.session_state.mg_date = None
-            #     st.session_state.department = ""
         
             # ---- Reset token so widgets rebuild fresh after submit ----
             if "fta_form_token" not in st.session_state:
@@ -249,78 +230,6 @@ def show_feedback_tracking_page(go_to):
             else:
                 st.info("No feedback history yet.")
 
-
-            # if call_type == "1st call":
-            #     call_success = st.selectbox("Was the call successful?", [
-            #         "Yes", "Yes, but not reachable", "Yes, but switched off",
-            #         "Yes, but didn't pick", "Yes, sent TSP communique", "Yes, sent a message"
-            #     ])
-            #     feedback_1 = st.selectbox("Feedback of 1st call", [
-            #         "Close", "Just visiting", "Out of town", "Prayer request",
-            #         "Transport needed", "Would love to join", "Hope to visit again",
-            #         "Others (Please specify)"
-            #     ])
-            #     general_feedback = st.text_area("General Feedback on 1st call")
-        
-            # elif call_type == "2nd call":
-            #     met_date = st.date_input("Date you met your FTA")
-            #     general_feedback = st.text_area("General Feedback on 2nd call")
-        
-            # elif call_type == "3rd call":
-            #     general_feedback = st.text_area("General Feedback on 3rd call")
-        
-            # elif call_type == "M&G Attended":
-            #     mg_date = st.date_input("Date for M&G")
-            #     general_feedback = st.text_area("General Feedback on M&G Attended")
-        
-            # elif call_type == "After Effect Confirmation":
-            #     department = st.selectbox("Department handed over to", [
-            #         "— Select —",
-            #         "Audacity - Minister Gift", "Envagelism - Pastor Paul", "Warm Heart - Phillipa",
-            #         "Prayer - Pastor Paul", "Audio-visual & Photography - Lori",
-            #         "Giants & Pillars - Sarah Ozobu", "Social Media - Jeminine",
-            #         "Refinery - Pastor Chibuzor", "Media Projection - Joshua", "Potters - Solomon",
-            #         "Greeters - Rosemary", "Lawyers Club - Barrister Ahmed",
-            #         "Help Desk - Pastor Yemi", "Glamour House - Barrister Amaka",
-            #         "Couples Commiunity - Pastor Victor", "Ladies Community - Dorcas Smith",
-            #         "Gents Community - Peter Obasi", "Medical Community - Doctor Jane",
-            #         "Traffic - Mr. Emmanuel", "Transport - Francis Ozobu"
-            #     ])
-            #     general_feedback = st.text_area("General Feedback on Department Handover")
-        
-            # if st.button("Submit Feedback"):
-            #     feedback = Feedback(
-            #         email=email,
-            #         fta_id=selected_fta,
-            #         call_type=call_type,
-            #         call_success=call_success,
-            #         feedback_1=feedback_1,
-            #         met_date=met_date if met_date else None,
-            #         mg_date=mg_date if mg_date else None,
-            #         # met_date=met_date.isoformat() if met_date else None,
-            #         # mg_date=mg_date.isoformat() if mg_date else None,
-            #         department=department,
-            #         general_feedback=general_feedback,
-            #         submitted_at=datetime.now()
-            #     )
-            #     session.add(feedback)
-            #     session.commit()
-        
-            #     st.success("✅ Feedback submitted successfully!")
-            #     # Reset form inputs
-            #     reset_inputs()
-            #     st.rerun()
-             
-            # st.markdown("---")
-            # st.subheader("📜 Contact History")
-        
-            # all_feedback = session.query(Feedback).filter_by(email=email).all()
-            # if all_feedback:
-            #     df_history = pd.DataFrame([f.__dict__ for f in all_feedback])
-            #     df_history.drop("_sa_instance_state", axis=1, inplace=True)
-            #     st.dataframe(df_history.sort_values("submitted_at", ascending=False), use_container_width=True)
-            # else:
-            #     st.info("No feedback history yet.")
         except KeyError:
             st.warning(
                 "⚠️ Please visit the **'Go to FTAs'** page first to view the full details "

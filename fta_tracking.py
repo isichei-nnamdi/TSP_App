@@ -144,7 +144,9 @@ def show_feedback_tracking_page(go_to):
     
             st.success("✅ Feedback submitted successfully!")
             st.rerun()
-        
+     with col3:
+        st.write("")
+         
         st.markdown("---")
         st.subheader("📜 Contact History")
     
@@ -155,8 +157,7 @@ def show_feedback_tracking_page(go_to):
             st.dataframe(df_history.sort_values("submitted_at", ascending=False), use_container_width=True)
         else:
             st.info("No feedback history yet.")
-    with col3:
-        st.write("")
+    
 
 
 

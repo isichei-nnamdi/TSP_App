@@ -43,14 +43,14 @@ def show_fta_page(go_to):
     current_hour = datetime.now().hour
 
     # Determine time-based greeting
-    if 5 <= current_hour < 12:
+    if 0 <= current_hour < 12:
         greeting = "Good morning"
     elif 12 <= current_hour < 17:
         greeting = "Good afternoon"
     elif 17 <= current_hour < 21:
         greeting = "Good evening"
     else:
-        greeting = "Hello"
+        greeting = "Good night"
 
     # ------------------------------------------------
     # === Helper Function to Show Filtered Tables ===

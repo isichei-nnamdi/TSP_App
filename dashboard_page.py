@@ -162,40 +162,13 @@ def show_dashboard_page(go_to):
         .card-value {{ font-size: 32px; font-weight: bold; margin-top: 5px; }}
         </style>
         <div class="card-container">
-            <div class="card card-red"><div class="card-icon">No of Invitees <span>🢑</span></div><div class="card-value">{}</div></div>
+            <div class="card card-red"><div class="card-icon">No of Invitees <span>🧑‍🤝‍🧑</span></div><div class="card-value">{}</div></div>
             <div class="card card-yellow"><div class="card-icon">No of Converted <span>✔️</span></div><div class="card-value">{}</div></div>
             <div class="card card-red"><div class="card-icon">Conversion Rate <span>📊</span></div><div class="card-value">{}%</div></div>
         </div>
     """.format(total_invitees, converted, conversion_rate), unsafe_allow_html=True)
 
     st.markdown("---")
-
-    # color_palette = ["#FEE440", "#8B0000", "#B0B0B0"]
-    # def assign_colors(data_dict, color_list):
-    #     sorted_items = sorted(data_dict.items(), key=lambda x: x[1], reverse=True)
-    #     return {k: color_list[i % len(color_list)] for i, (k, _) in enumerate(sorted_items)}
-
-    # def donut_chart(title, data_dict, color_dict):
-    #     labels, values = list(data_dict.keys()), list(data_dict.values())
-    #     total = sum(values)
-    #     fig = go.Figure([go.Pie(labels=labels, values=values, hole=0.75, marker=dict(colors=[color_dict[k] for k in labels]), textinfo='none')])
-    #     fig.update_layout(title=dict(text=title, x=0.1, font=dict(size=16)), showlegend=False, height=300, width=300)
-
-    #     col_chart, col_legend = st.columns([2, 1])
-    #     with col_chart:
-    #         st.plotly_chart(fig, use_container_width=True)
-    #     with col_legend:
-    #         for label in labels:
-    #             val, pct = data_dict[label], int((data_dict[label] / total) * 100)
-    #             st.markdown(f"<div><strong>{label}</strong> {val} ({pct}%)</div>", unsafe_allow_html=True)
-
-    # donut1, donut2, donut3 = st.columns(3)
-    # with donut1:
-    #     donut_chart("Like to be a Member?", member_intent, assign_colors(member_intent, color_palette))
-    # with donut2:
-    #     donut_chart("Invitees by Gender", gender, assign_colors(gender, color_palette))
-    # with donut3:
-    #     donut_chart("Invitees by Data Use Consent", mg_data, assign_colors(mg_data, color_palette))
 
     color_palette = ["#FEE440", "#8B0000", "#B0B0B0", "#321F1F", "#CD0BC9"]
 
@@ -233,6 +206,10 @@ def show_dashboard_page(go_to):
             st.plotly_chart(fig, use_container_width=True)
         with col_legend:
             st.write(" ")  # some spacing
+            st.write(" ")
+            st.write(" ")
+            st.write(" ")
+            st.write(" ")
             for label in labels:
                 val = data_dict[label]
                 pct = int((val / total) * 100)
@@ -258,11 +235,32 @@ def show_dashboard_page(go_to):
     with donut3:
         donut_chart("Invitees by Data Use Consent", mg_data, assign_colors(mg_data, color_palette))
 
+    # bottom1, bottom2 = st.columns([2, 1])
+    # with bottom1:
+    #     if not monthly_counts.empty:
+    #         fig4 = px.line(x=monthly_counts.index, y=monthly_counts.values, markers=True)
+    #         fig4.update_layout(title_text="Invitees by Month", xaxis_title="Month", yaxis_title="Number of FTA")
+    #         st.plotly_chart(fig4, use_container_width=True)
+    #     else:
+    #         st.info("Monthly invitee data not available.")
+    # Ensure months are in chronological order
+    month_order = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    monthly_counts = monthly_counts.reindex(month_order).dropna()
+    
     bottom1, bottom2 = st.columns([2, 1])
     with bottom1:
         if not monthly_counts.empty:
-            fig4 = px.line(x=monthly_counts.index, y=monthly_counts.values, markers=True)
-            fig4.update_layout(title_text="Invitees by Month", xaxis_title="Month", yaxis_title="Number of FTA")
+            fig4 = px.line(
+                x=monthly_counts.index, 
+                y=monthly_counts.values, 
+                markers=True
+            )
+            fig4.update_traces(line=dict(color='#800020'))  # Set oxblood color
+            fig4.update_layout(
+                title_text="Invitees by Month",
+                xaxis_title="Month",
+                yaxis_title="Number of FTA"
+            )
             st.plotly_chart(fig4, use_container_width=True)
         else:
             st.info("Monthly invitee data not available.")

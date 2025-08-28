@@ -170,33 +170,6 @@ def show_dashboard_page(go_to):
 
     st.markdown("---")
 
-    # color_palette = ["#FEE440", "#8B0000", "#B0B0B0"]
-    # def assign_colors(data_dict, color_list):
-    #     sorted_items = sorted(data_dict.items(), key=lambda x: x[1], reverse=True)
-    #     return {k: color_list[i % len(color_list)] for i, (k, _) in enumerate(sorted_items)}
-
-    # def donut_chart(title, data_dict, color_dict):
-    #     labels, values = list(data_dict.keys()), list(data_dict.values())
-    #     total = sum(values)
-    #     fig = go.Figure([go.Pie(labels=labels, values=values, hole=0.75, marker=dict(colors=[color_dict[k] for k in labels]), textinfo='none')])
-    #     fig.update_layout(title=dict(text=title, x=0.1, font=dict(size=16)), showlegend=False, height=300, width=300)
-
-    #     col_chart, col_legend = st.columns([2, 1])
-    #     with col_chart:
-    #         st.plotly_chart(fig, use_container_width=True)
-    #     with col_legend:
-    #         for label in labels:
-    #             val, pct = data_dict[label], int((data_dict[label] / total) * 100)
-    #             st.markdown(f"<div><strong>{label}</strong> {val} ({pct}%)</div>", unsafe_allow_html=True)
-
-    # donut1, donut2, donut3 = st.columns(3)
-    # with donut1:
-    #     donut_chart("Like to be a Member?", member_intent, assign_colors(member_intent, color_palette))
-    # with donut2:
-    #     donut_chart("Invitees by Gender", gender, assign_colors(gender, color_palette))
-    # with donut3:
-    #     donut_chart("Invitees by Data Use Consent", mg_data, assign_colors(mg_data, color_palette))
-
     color_palette = ["#FEE440", "#8B0000", "#B0B0B0", "#321F1F", "#CD0BC9"]
 
     def assign_colors(data_dict, color_list):
@@ -233,6 +206,10 @@ def show_dashboard_page(go_to):
             st.plotly_chart(fig, use_container_width=True)
         with col_legend:
             st.write(" ")  # some spacing
+            st.write(" ")
+            st.write(" ")
+            st.write(" ")
+            st.write(" ")
             for label in labels:
                 val = data_dict[label]
                 pct = int((val / total) * 100)

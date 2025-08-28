@@ -113,8 +113,8 @@ def show_feedback_tracking_page(go_to):
                 st.session_state.mg_date = None
                 st.session_state.department = ""
         
-            # call_success, feedback_1, met_date, mg_date, department = None, None, None, None, None
-            # general_feedback = ""
+            call_success, feedback_1, met_date, mg_date, department = None, None, None, None, None
+            general_feedback = ""
             
             if call_type == "1st call":
                 call_success = st.selectbox("Was the call successful?", [

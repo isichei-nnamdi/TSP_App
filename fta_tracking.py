@@ -114,9 +114,9 @@ def show_feedback_tracking_page(go_to):
             #     st.session_state.department = ""
         
             # ---- Reset token so widgets rebuild fresh after submit ----
-            if "fta_form_token" not in st.session_state:
-                st.session_state.fta_form_token = 0
-            token = st.session_state.fta_form_token
+            # if "fta_form_token" not in st.session_state:
+            #     st.session_state.fta_form_token = 0
+            # token = st.session_state.fta_form_token
 
             # ---- Initialize to avoid UnboundLocalError across branches ----
             call_success = None
@@ -126,192 +126,121 @@ def show_feedback_tracking_page(go_to):
             department = None
             general_feedback = ""
             
-            # ---- Options with a neutral placeholder so selectboxes can reset ----
-            CALL_SUCCESS_OPTS = [
-                "— Select —",
-                "Yes", "Yes, but not reachable", "Yes, but switched off",
-                "Yes, but didn't pick", "Yes, sent TSP communique", "Yes, sent a message"
-            ]
-            FEEDBACK1_OPTS = [
-                "— Select —",
-                "Close", "Just visiting", "Out of town", "Prayer request",
-                "Transport needed", "Would love to join", "Hope to visit again",
-                "Others (Please specify)"
-            ]
-            DEPT_OPTS = [
-                "— Select —",
-                "Audacity - Minister Gift", "Envagelism - Pastor Paul", "Warm Heart - Phillipa",
-                "Prayer - Pastor Paul", "Audio-visual & Photography - Lori",
-                "Giants & Pillars - Sarah Ozobu", "Social Media - Jeminine",
-                "Refinery - Pastor Chibuzor", "Media Projection - Joshua", "Potters - Solomon",
-                "Greeters - Rosemary", "Lawyers Club - Barrister Ahmed",
-                "Help Desk - Pastor Yemi", "Glamour House - Barrister Amaka",
-                "Couples Commiunity - Pastor Victor", "Ladies Community - Dorcas Smith",
-                "Gents Community - Peter Obasi", "Medical Community - Doctor Jane",
-                "Traffic - Mr. Emmanuel", "Transport - Francis Ozobu"
-            ]
+            # # ---- Options with a neutral placeholder so selectboxes can reset ----
+            # CALL_SUCCESS_OPTS = [
+            #     "— Select —",
+            #     "Yes", "Yes, but not reachable", "Yes, but switched off",
+            #     "Yes, but didn't pick", "Yes, sent TSP communique", "Yes, sent a message"
+            # ]
+            # FEEDBACK1_OPTS = [
+            #     "— Select —",
+            #     "Close", "Just visiting", "Out of town", "Prayer request",
+            #     "Transport needed", "Would love to join", "Hope to visit again",
+            #     "Others (Please specify)"
+            # ]
+            # DEPT_OPTS = [
+            #     "— Select —",
+            #     "Audacity - Minister Gift", "Envagelism - Pastor Paul", "Warm Heart - Phillipa",
+            #     "Prayer - Pastor Paul", "Audio-visual & Photography - Lori",
+            #     "Giants & Pillars - Sarah Ozobu", "Social Media - Jeminine",
+            #     "Refinery - Pastor Chibuzor", "Media Projection - Joshua", "Potters - Solomon",
+            #     "Greeters - Rosemary", "Lawyers Club - Barrister Ahmed",
+            #     "Help Desk - Pastor Yemi", "Glamour House - Barrister Amaka",
+            #     "Couples Commiunity - Pastor Victor", "Ladies Community - Dorcas Smith",
+            #     "Gents Community - Peter Obasi", "Medical Community - Doctor Jane",
+            #     "Traffic - Mr. Emmanuel", "Transport - Francis Ozobu"
+            # ]
 
-            # ---- Your form widgets (keys include the token) ----
-            if call_type == "1st call":
-                call_success = st.selectbox(
-                    "Was the call successful?",
-                    CALL_SUCCESS_OPTS,
-                    index=0,
-                    key=f"call_success_{token}",
-                )
-                feedback_1 = st.selectbox(
-                    "Feedback of 1st call",
-                    FEEDBACK1_OPTS,
-                    index=0,
-                    key=f"feedback_1_{token}",
-                )
-                general_feedback = st.text_area(
-                    "General Feedback on 1st call",
-                    key=f"general_feedback_{token}",
-                )
-
-            elif call_type == "2nd call":
-                met_date = st.date_input(
-                    "Date you met your FTA",
-                    key=f"met_date_{token}",
-                )
-                general_feedback = st.text_area(
-                    "General Feedback on 2nd call",
-                    key=f"general_feedback_{token}",
-                )
-
-            elif call_type == "3rd call":
-                general_feedback = st.text_area(
-                    "General Feedback on 3rd call",
-                    key=f"general_feedback_{token}",
-                )
-
-            elif call_type == "M&G Attended":
-                mg_date = st.date_input(
-                    "Date for M&G",
-                    key=f"mg_date_{token}",
-                )
-                general_feedback = st.text_area(
-                    "General Feedback on M&G Attended",
-                    key=f"general_feedback_{token}",
-                )
-
-            elif call_type == "After Effect Confirmation":
-                department = st.selectbox(
-                    "Department handed over to",
-                    DEPT_OPTS,
-                    index=0,
-                    key=f"department_{token}",
-                )
-                general_feedback = st.text_area(
-                    "General Feedback on Department Handover",
-                    key=f"general_feedback_{token}",
-                )
-
-            # ---- Submit and fully reset widgets by changing the token ----
-            if st.button("Submit Feedback", key=f"submit_{token}"):
-                # Normalize placeholder -> None
-                call_success_val = None if call_success in (None, "— Select —") else call_success
-                feedback_1_val  = None if feedback_1  in (None, "— Select —") else feedback_1
-                dept_val        = None if department  in (None, "— Select —") else department
-
-                feedback = Feedback(
-                    email=email,
-                    fta_id=selected_fta,
-                    call_type=call_type,
-                    call_success=call_success_val if call_type == "1st call" else None,
-                    feedback_1=feedback_1_val if call_type == "1st call" else None,
-                    met_date=met_date if call_type == "2nd call" else None,
-                    mg_date=mg_date if call_type == "M&G Attended" else None,
-                    department=dept_val if call_type == "After Effect Confirmation" else None,
-                    general_feedback=general_feedback,
-                    submitted_at=datetime.now()
-                )
-
-                session.add(feedback)
-                session.commit()
-
-                st.success("✅ Feedback submitted successfully!")
-
-                # Bump the token so all widget keys change (forces a clean rebuild)
-                st.session_state.fta_form_token += 1
-                st.rerun()
-
-            # ---- History Section (unchanged) ----
-            st.markdown("---")
-            st.subheader("📜 Contact History")
-
-            all_feedback = session.query(Feedback).filter_by(email=email).all()
-            if all_feedback:
-                df_history = pd.DataFrame([f.__dict__ for f in all_feedback])
-                df_history.drop("_sa_instance_state", axis=1, inplace=True)
-                st.dataframe(df_history.sort_values("submitted_at", ascending=False), use_container_width=True)
-            else:
-                st.info("No feedback history yet.")
+            # # ---- Your form widgets (keys include the token) ----
             # if call_type == "1st call":
-            #     call_success = st.selectbox("Was the call successful?", [
-            #         "Yes", "Yes, but not reachable", "Yes, but switched off",
-            #         "Yes, but didn't pick", "Yes, sent TSP communique", "Yes, sent a message"
-            #     ])
-            #     feedback_1 = st.selectbox("Feedback of 1st call", [
-            #         "Close", "Just visiting", "Out of town", "Prayer request",
-            #         "Transport needed", "Would love to join", "Hope to visit again",
-            #         "Others (Please specify)"
-            #     ])
-            #     general_feedback = st.text_area("General Feedback on 1st call")
-        
+            #     call_success = st.selectbox(
+            #         "Was the call successful?",
+            #         CALL_SUCCESS_OPTS,
+            #         index=0,
+            #         key=f"call_success_{token}",
+            #     )
+            #     feedback_1 = st.selectbox(
+            #         "Feedback of 1st call",
+            #         FEEDBACK1_OPTS,
+            #         index=0,
+            #         key=f"feedback_1_{token}",
+            #     )
+            #     general_feedback = st.text_area(
+            #         "General Feedback on 1st call",
+            #         key=f"general_feedback_{token}",
+            #     )
+
             # elif call_type == "2nd call":
-            #     met_date = st.date_input("Date you met your FTA")
-            #     general_feedback = st.text_area("General Feedback on 2nd call")
-        
+            #     met_date = st.date_input(
+            #         "Date you met your FTA",
+            #         key=f"met_date_{token}",
+            #     )
+            #     general_feedback = st.text_area(
+            #         "General Feedback on 2nd call",
+            #         key=f"general_feedback_{token}",
+            #     )
+
             # elif call_type == "3rd call":
-            #     general_feedback = st.text_area("General Feedback on 3rd call")
-        
+            #     general_feedback = st.text_area(
+            #         "General Feedback on 3rd call",
+            #         key=f"general_feedback_{token}",
+            #     )
+
             # elif call_type == "M&G Attended":
-            #     mg_date = st.date_input("Date for M&G")
-            #     general_feedback = st.text_area("General Feedback on M&G Attended")
-        
+            #     mg_date = st.date_input(
+            #         "Date for M&G",
+            #         key=f"mg_date_{token}",
+            #     )
+            #     general_feedback = st.text_area(
+            #         "General Feedback on M&G Attended",
+            #         key=f"general_feedback_{token}",
+            #     )
+
             # elif call_type == "After Effect Confirmation":
-            #     department = st.selectbox("Department handed over to", [
-            #         "— Select —",
-            #         "Audacity - Minister Gift", "Envagelism - Pastor Paul", "Warm Heart - Phillipa",
-            #         "Prayer - Pastor Paul", "Audio-visual & Photography - Lori",
-            #         "Giants & Pillars - Sarah Ozobu", "Social Media - Jeminine",
-            #         "Refinery - Pastor Chibuzor", "Media Projection - Joshua", "Potters - Solomon",
-            #         "Greeters - Rosemary", "Lawyers Club - Barrister Ahmed",
-            #         "Help Desk - Pastor Yemi", "Glamour House - Barrister Amaka",
-            #         "Couples Commiunity - Pastor Victor", "Ladies Community - Dorcas Smith",
-            #         "Gents Community - Peter Obasi", "Medical Community - Doctor Jane",
-            #         "Traffic - Mr. Emmanuel", "Transport - Francis Ozobu"
-            #     ])
-            #     general_feedback = st.text_area("General Feedback on Department Handover")
-        
-            # if st.button("Submit Feedback"):
+            #     department = st.selectbox(
+            #         "Department handed over to",
+            #         DEPT_OPTS,
+            #         index=0,
+            #         key=f"department_{token}",
+            #     )
+            #     general_feedback = st.text_area(
+            #         "General Feedback on Department Handover",
+            #         key=f"general_feedback_{token}",
+            #     )
+
+            # # ---- Submit and fully reset widgets by changing the token ----
+            # if st.button("Submit Feedback", key=f"submit_{token}"):
+            #     # Normalize placeholder -> None
+            #     call_success_val = None if call_success in (None, "— Select —") else call_success
+            #     feedback_1_val  = None if feedback_1  in (None, "— Select —") else feedback_1
+            #     dept_val        = None if department  in (None, "— Select —") else department
+
             #     feedback = Feedback(
             #         email=email,
             #         fta_id=selected_fta,
             #         call_type=call_type,
-            #         call_success=call_success,
-            #         feedback_1=feedback_1,
-            #         met_date=met_date if met_date else None,
-            #         mg_date=mg_date if mg_date else None,
-            #         # met_date=met_date.isoformat() if met_date else None,
-            #         # mg_date=mg_date.isoformat() if mg_date else None,
-            #         department=department,
+            #         call_success=call_success_val if call_type == "1st call" else None,
+            #         feedback_1=feedback_1_val if call_type == "1st call" else None,
+            #         met_date=met_date if call_type == "2nd call" else None,
+            #         mg_date=mg_date if call_type == "M&G Attended" else None,
+            #         department=dept_val if call_type == "After Effect Confirmation" else None,
             #         general_feedback=general_feedback,
             #         submitted_at=datetime.now()
             #     )
+
             #     session.add(feedback)
             #     session.commit()
-        
+
             #     st.success("✅ Feedback submitted successfully!")
-            #     # Reset form inputs
-            #     reset_inputs()
+
+            #     # Bump the token so all widget keys change (forces a clean rebuild)
+            #     st.session_state.fta_form_token += 1
             #     st.rerun()
-             
+
+            # # ---- History Section (unchanged) ----
             # st.markdown("---")
             # st.subheader("📜 Contact History")
-        
+
             # all_feedback = session.query(Feedback).filter_by(email=email).all()
             # if all_feedback:
             #     df_history = pd.DataFrame([f.__dict__ for f in all_feedback])
@@ -319,6 +248,79 @@ def show_feedback_tracking_page(go_to):
             #     st.dataframe(df_history.sort_values("submitted_at", ascending=False), use_container_width=True)
             # else:
             #     st.info("No feedback history yet.")
+
+
+            if call_type == "1st call":
+                call_success = st.selectbox("Was the call successful?", [
+                    "Yes", "Yes, but not reachable", "Yes, but switched off",
+                    "Yes, but didn't pick", "Yes, sent TSP communique", "Yes, sent a message"
+                ])
+                feedback_1 = st.selectbox("Feedback of 1st call", [
+                    "Close", "Just visiting", "Out of town", "Prayer request",
+                    "Transport needed", "Would love to join", "Hope to visit again",
+                    "Others (Please specify)"
+                ])
+                general_feedback = st.text_area("General Feedback on 1st call")
+        
+            elif call_type == "2nd call":
+                met_date = st.date_input("Date you met your FTA")
+                general_feedback = st.text_area("General Feedback on 2nd call")
+        
+            elif call_type == "3rd call":
+                general_feedback = st.text_area("General Feedback on 3rd call")
+        
+            elif call_type == "M&G Attended":
+                mg_date = st.date_input("Date for M&G")
+                general_feedback = st.text_area("General Feedback on M&G Attended")
+        
+            elif call_type == "After Effect Confirmation":
+                department = st.selectbox("Department handed over to", [
+                    "— Select —",
+                    "Audacity - Minister Gift", "Envagelism - Pastor Paul", "Warm Heart - Phillipa",
+                    "Prayer - Pastor Paul", "Audio-visual & Photography - Lori",
+                    "Giants & Pillars - Sarah Ozobu", "Social Media - Jeminine",
+                    "Refinery - Pastor Chibuzor", "Media Projection - Joshua", "Potters - Solomon",
+                    "Greeters - Rosemary", "Lawyers Club - Barrister Ahmed",
+                    "Help Desk - Pastor Yemi", "Glamour House - Barrister Amaka",
+                    "Couples Commiunity - Pastor Victor", "Ladies Community - Dorcas Smith",
+                    "Gents Community - Peter Obasi", "Medical Community - Doctor Jane",
+                    "Traffic - Mr. Emmanuel", "Transport - Francis Ozobu"
+                ])
+                general_feedback = st.text_area("General Feedback on Department Handover")
+        
+            if st.button("Submit Feedback"):
+                feedback = Feedback(
+                    email=email,
+                    fta_id=selected_fta,
+                    call_type=call_type,
+                    call_success=call_success,
+                    feedback_1=feedback_1,
+                    met_date=met_date if met_date else None,
+                    mg_date=mg_date if mg_date else None,
+                    # met_date=met_date.isoformat() if met_date else None,
+                    # mg_date=mg_date.isoformat() if mg_date else None,
+                    department=department,
+                    general_feedback=general_feedback,
+                    submitted_at=datetime.now()
+                )
+                session.add(feedback)
+                session.commit()
+        
+                st.success("✅ Feedback submitted successfully!")
+                # Reset form inputs
+                reset_inputs()
+                st.rerun()
+             
+            st.markdown("---")
+            st.subheader("📜 Contact History")
+        
+            all_feedback = session.query(Feedback).filter_by(email=email).all()
+            if all_feedback:
+                df_history = pd.DataFrame([f.__dict__ for f in all_feedback])
+                df_history.drop("_sa_instance_state", axis=1, inplace=True)
+                st.dataframe(df_history.sort_values("submitted_at", ascending=False), use_container_width=True)
+            else:
+                st.info("No feedback history yet.")
         except KeyError:
             st.warning(
                 "⚠️ Please visit the **'Go to FTAs'** page first to view the full details "

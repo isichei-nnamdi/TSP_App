@@ -147,16 +147,16 @@ def show_feedback_tracking_page(go_to):
      with col3:
         st.write("")
          
-        st.markdown("---")
-        st.subheader("📜 Contact History")
-    
-        all_feedback = session.query(Feedback).filter_by(email=email).all()
-        if all_feedback:
-            df_history = pd.DataFrame([f.__dict__ for f in all_feedback])
-            df_history.drop("_sa_instance_state", axis=1, inplace=True)
-            st.dataframe(df_history.sort_values("submitted_at", ascending=False), use_container_width=True)
-        else:
-            st.info("No feedback history yet.")
+    st.markdown("---")
+    st.subheader("📜 Contact History")
+
+    all_feedback = session.query(Feedback).filter_by(email=email).all()
+    if all_feedback:
+        df_history = pd.DataFrame([f.__dict__ for f in all_feedback])
+        df_history.drop("_sa_instance_state", axis=1, inplace=True)
+        st.dataframe(df_history.sort_values("submitted_at", ascending=False), use_container_width=True)
+    else:
+        st.info("No feedback history yet.")
     
 
 

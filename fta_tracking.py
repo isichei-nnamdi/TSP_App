@@ -144,8 +144,8 @@ def show_feedback_tracking_page(go_to):
     
             st.success("✅ Feedback submitted successfully!")
             st.rerun()
-    with col3:
-        st.write("")
+    # with col3:
+    #     st.write("")
         
         st.markdown("---")
         st.subheader("📜 Contact History")

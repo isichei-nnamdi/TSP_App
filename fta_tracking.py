@@ -28,7 +28,7 @@ Session = sessionmaker(bind=engine)
 
 def show_feedback_tracking_page(go_to):
     df_fta_response = st.session_state["fta_data"]
-    st.heading("🔣️ FTA Feedback Tracking")
+    st.title("🔣️ FTA Feedback Tracking")
     col1, col2, col3 = st.columns([1, 2, 1])
     with col1:
         st.write("")

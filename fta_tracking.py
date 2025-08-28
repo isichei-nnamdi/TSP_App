@@ -51,17 +51,23 @@ def show_feedback_tracking_page(go_to):
         if assigned_ftas.empty:
             st.info("You don't have any assigned FTAs.")
             return
-    
-        # Merge with response data to include phone numbers
-        assigned_ftas = assigned_ftas.merge(
-            df_fta_response[["fta_id", "phone", "full_name"]],
-            on="fta_id",
-            how="left"
-        )
-    
-        # Fetch feedback history for this user
-        feedback_records = session.query(Feedback.fta_id, Feedback.call_type).filter_by(email=email).all()
-        feedback_df = pd.DataFrame(feedback_records, columns=["fta_id", "call_type"])
+        try:
+            # Merge with response data to include phone numbers
+            assigned_ftas = assigned_ftas.merge(
+                df_fta_response[["fta_id", "phone", "full_name"]],
+                on="fta_id",
+                how="left"
+            )
+        
+            # Fetch feedback history for this user
+            feedback_records = session.query(Feedback.fta_id, Feedback.call_type).filter_by(email=email).all()
+            feedback_df = pd.DataFrame(feedback_records, columns=["fta_id", "call_type"])
+        except KeyError:
+            st.warning(
+                "⚠️ Please visit the **'Go to FTAs'** page first to view the full details "
+                "of your assigned FTAs. Once you've reviewed the information, return to "
+                "the **'FTA Tracking'** page to continue with your feedback."
+            )
     
         call_type = st.selectbox("Type of Call", [
             "1st call", "2nd call", "3rd call", "M&G Attended", "After Effect Confirmation"

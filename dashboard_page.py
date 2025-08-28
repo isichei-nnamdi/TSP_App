@@ -258,11 +258,32 @@ def show_dashboard_page(go_to):
     with donut3:
         donut_chart("Invitees by Data Use Consent", mg_data, assign_colors(mg_data, color_palette))
 
+    # bottom1, bottom2 = st.columns([2, 1])
+    # with bottom1:
+    #     if not monthly_counts.empty:
+    #         fig4 = px.line(x=monthly_counts.index, y=monthly_counts.values, markers=True)
+    #         fig4.update_layout(title_text="Invitees by Month", xaxis_title="Month", yaxis_title="Number of FTA")
+    #         st.plotly_chart(fig4, use_container_width=True)
+    #     else:
+    #         st.info("Monthly invitee data not available.")
+    # Ensure months are in chronological order
+    month_order = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    monthly_counts = monthly_counts.reindex(month_order).dropna()
+    
     bottom1, bottom2 = st.columns([2, 1])
     with bottom1:
         if not monthly_counts.empty:
-            fig4 = px.line(x=monthly_counts.index, y=monthly_counts.values, markers=True)
-            fig4.update_layout(title_text="Invitees by Month", xaxis_title="Month", yaxis_title="Number of FTA")
+            fig4 = px.line(
+                x=monthly_counts.index, 
+                y=monthly_counts.values, 
+                markers=True
+            )
+            fig4.update_traces(line=dict(color='#800020'))  # Set oxblood color
+            fig4.update_layout(
+                title_text="Invitees by Month",
+                xaxis_title="Month",
+                yaxis_title="Number of FTA"
+            )
             st.plotly_chart(fig4, use_container_width=True)
         else:
             st.info("Monthly invitee data not available.")

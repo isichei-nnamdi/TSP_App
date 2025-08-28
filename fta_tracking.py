@@ -104,10 +104,18 @@ def show_feedback_tracking_page(go_to):
             else:
                 st.warning("No details found for the selected FTA.")
 
+            # --- Helper function to reset all form fields ---
+            def reset_inputs():
+                st.session_state.call_success = ""
+                st.session_state.feedback_1 = ""
+                st.session_state.general_feedback = ""
+                st.session_state.met_date = None
+                st.session_state.mg_date = None
+                st.session_state.department = ""
         
-            call_success, feedback_1, met_date, mg_date, department = None, None, None, None, None
-            general_feedback = ""
-        
+            # call_success, feedback_1, met_date, mg_date, department = None, None, None, None, None
+            # general_feedback = ""
+            
             if call_type == "1st call":
                 call_success = st.selectbox("Was the call successful?", [
                     "Yes", "Yes, but not reachable", "Yes, but switched off",
@@ -164,6 +172,8 @@ def show_feedback_tracking_page(go_to):
                 session.commit()
         
                 st.success("✅ Feedback submitted successfully!")
+                # Reset form inputs
+                reset_inputs()
                 st.rerun()
              
             st.markdown("---")

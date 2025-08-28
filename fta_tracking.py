@@ -28,12 +28,12 @@ Session = sessionmaker(bind=engine)
 
 def show_feedback_tracking_page(go_to):
     df_fta_response = st.session_state["fta_data"]
-    st.title("🔣️ FTA Feedback Tracking")
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns([1, 3, 1])
     with col1:
         st.write("")
     with col2:    
         email = st.session_state.get("email")
+        st.subheader("🔣️ FTA Feedback Tracking")
         if not email:
             st.warning("You must be logged in to access this page.")
             return

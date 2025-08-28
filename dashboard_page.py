@@ -162,7 +162,7 @@ def show_dashboard_page(go_to):
         .card-value {{ font-size: 32px; font-weight: bold; margin-top: 5px; }}
         </style>
         <div class="card-container">
-            <div class="card card-red"><div class="card-icon">No of Invitees <span>🢑</span></div><div class="card-value">{}</div></div>
+            <div class="card card-red"><div class="card-icon">No of Invitees <span>🧑‍🤝‍🧑</span></div><div class="card-value">{}</div></div>
             <div class="card card-yellow"><div class="card-icon">No of Converted <span>✔️</span></div><div class="card-value">{}</div></div>
             <div class="card card-red"><div class="card-icon">Conversion Rate <span>📊</span></div><div class="card-value">{}%</div></div>
         </div>

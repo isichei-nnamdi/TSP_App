@@ -427,8 +427,10 @@ def show_team_page(go_to):
                             st.write(f"Attempting to deactivate {member['email']}...")
                             
                             # Try the SQL version first (most reliable)
-                            from db import toggle_a_team_member_status_sql
-                            success = toggle_a_team_member_status_sql(member['email'], False)
+                            # from db import toggle_a_team_member_status_sql
+                            from db import toggle_a_team_member_status_direct
+                            # success = toggle_a_team_member_status_sql(member['email'], False)
+                            success = toggle_a_team_member_status_direct(member['email'], False)
                             
                             if success:
                                 st.success(f"✅ Deactivated {member['full_name']}")

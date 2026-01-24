@@ -329,7 +329,7 @@ def show_team_page(go_to):
 
         # === Load members with status
         members_df = get_all_a_team_members_with_status()
-        st.write(members_df)  # Debug: display members with status
+        
         # === Load FTA count
         fta_count = (
             session.query(

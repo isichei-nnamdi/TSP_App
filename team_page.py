@@ -312,86 +312,87 @@ def show_team_page(go_to):
         st.write(" ")
         st.write(" ")
         # === Add new member ===
-        with st.expander("➕ Add New A-Team Member"):
-            email = st.text_input("Email")
-            full_name = st.text_input("Full Name")
-            create_login = st.checkbox("Also create login account with default password")
-            if st.button("Add Member"):
-                if email and full_name:
-                    add_a_team_member(email, full_name)
-                    if create_login:
-                        from db import add_user_to_a_team_if_needed
-                        add_user_to_a_team_if_needed(email, "password1234", role="A-Team")
-                    st.success("Member added successfully!")
-                    st.rerun()
-                else:
-                    st.warning("Please enter both email and full name.")
+    #     with st.expander("➕ Add New A-Team Member"):
+    #         email = st.text_input("Email")
+    #         full_name = st.text_input("Full Name")
+    #         create_login = st.checkbox("Also create login account with default password")
+    #         if st.button("Add Member"):
+    #             if email and full_name:
+    #                 add_a_team_member(email, full_name)
+    #                 if create_login:
+    #                     from db import add_user_to_a_team_if_needed
+    #                     add_user_to_a_team_if_needed(email, "password1234", role="A-Team")
+    #                 st.success("Member added successfully!")
+    #                 st.rerun()
+    #             else:
+    #                 st.warning("Please enter both email and full name.")
 
-        # === Load members with status
-        members_df = get_all_a_team_members_with_status()
+    # with col2:
+    #     # === Search/Filter ===
+    #     search = st.text_input("🔍 Search by email or name", placeholder="🔍 Search by email or name", label_visibility="hidden").lower()
+    #     filtered_df = members_df[members_df.apply(
+    #         lambda row: search in row["email"].lower() or search in row["full_name"].lower(), axis=1
+    #     )] if search else members_df
+
+    # === Load members with status
+    members_df = get_all_a_team_members_with_status()
         
-        # === Load FTA count
-        fta_count = (
-            session.query(
-                FtaAssignments.assigned_to.label("email"),
-                func.count(FtaAssignments.id).label("fta_count")
-            )
-            .group_by(FtaAssignments.assigned_to)
-            .all()
+    # === Load FTA count
+    fta_count = (
+        session.query(
+            FtaAssignments.assigned_to.label("email"),
+            func.count(FtaAssignments.id).label("fta_count")
         )
-        fta_counts = pd.DataFrame(fta_count, columns=["email", "fta_count"])
-        assignments_df = pd.read_sql(select(FtaAssignments), session.bind)
+        .group_by(FtaAssignments.assigned_to)
+        .all()
+    )
+    fta_counts = pd.DataFrame(fta_count, columns=["email", "fta_count"])
+    assignments_df = pd.read_sql(select(FtaAssignments), session.bind)
 
-        # Merge carefully
-        members_df = pd.merge(members_df, fta_counts, on="email", how="left")
-        members_df["fta_count"] = members_df["fta_count"].fillna(0).astype(int)
-
-    with col2:
-        # === Search/Filter ===
-        search = st.text_input("🔍 Search by email or name", placeholder="🔍 Search by email or name", label_visibility="hidden").lower()
-        filtered_df = members_df[members_df.apply(
-            lambda row: search in row["email"].lower() or search in row["full_name"].lower(), axis=1
-        )] if search else members_df
+    # Merge carefully
+    members_df = pd.merge(members_df, fta_counts, on="email", how="left")
+    members_df["fta_count"] = members_df["fta_count"].fillna(0).astype(int)
 
     # === Manage Active/Inactive Status ===
     st.markdown("---")
-    st.markdown("##### 🔄 Manage A-Team Member Availability")
-    
-    col1, col2 = st.columns([1, 1])
-    
-    with col1:
-        st.markdown("**Active Members** (Currently receiving assignments)")
-        active_members = members_df[members_df['is_active'] == True]
+    with st.expander("##### 🔄 Manage A-Team Member Availability"):
+        # st.markdown("##### 🔄 Manage A-Team Member Availability")
         
-        if not active_members.empty:
-            for _, member in active_members.iterrows():
-                col_a, col_b = st.columns([4, 1.5])
-                with col_a:
-                    st.write(f"✅ {member['full_name']} ({member['email']})")
-                with col_b:
-                    if st.button("Deactivate", key=f"deactivate_{member['email']}"):
-                        toggle_a_team_member_status(member['email'], False)
-                        st.success(f"Deactivated {member['full_name']}")
-                        st.rerun()
-        else:
-            st.info("No active members")
-    
-    with col2:
-        st.markdown("**Inactive Members** (Not receiving new assignments)")
-        inactive_members = members_df[members_df['is_active'] == False]
+        col1, col2 = st.columns([1, 1])
         
-        if not inactive_members.empty:
-            for _, member in inactive_members.iterrows():
-                col_a, col_b = st.columns([4, 1.5])
-                with col_a:
-                    st.write(f"⏸️ {member['full_name']} ({member['email']})")
-                with col_b:
-                    if st.button("Activate", key=f"activate_{member['email']}"):
-                        toggle_a_team_member_status(member['email'], True)
-                        st.success(f"Activated {member['full_name']}")
-                        st.rerun()
-        else:
-            st.info("No inactive members")
+        with col1:
+            st.markdown("**Active Members** (Currently receiving assignments)")
+            active_members = members_df[members_df['is_active'] == True]
+            
+            if not active_members.empty:
+                for _, member in active_members.iterrows():
+                    col_a, col_b = st.columns([4, 1.5])
+                    with col_a:
+                        st.write(f"✅ {member['full_name']} ({member['email']})")
+                    with col_b:
+                        if st.button("Deactivate", key=f"deactivate_{member['email']}"):
+                            toggle_a_team_member_status(member['email'], False)
+                            st.success(f"Deactivated {member['full_name']}")
+                            st.rerun()
+            else:
+                st.info("No active members")
+        
+        with col2:
+            st.markdown("**Inactive Members** (Not receiving new assignments)")
+            inactive_members = members_df[members_df['is_active'] == False]
+            
+            if not inactive_members.empty:
+                for _, member in inactive_members.iterrows():
+                    col_a, col_b = st.columns([4, 1.5])
+                    with col_a:
+                        st.write(f"⏸️ {member['full_name']} ({member['email']})")
+                    with col_b:
+                        if st.button("Activate", key=f"activate_{member['email']}"):
+                            toggle_a_team_member_status(member['email'], True)
+                            st.success(f"Activated {member['full_name']}")
+                            st.rerun()
+            else:
+                st.info("No inactive members")
 
     # --- Load members and assignments ---
     assignments_df = pd.read_sql(select(FtaAssignments), session.bind)

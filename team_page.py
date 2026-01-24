@@ -361,54 +361,107 @@ def show_team_page(go_to):
         # Reload members to get fresh status
         fresh_members_df = get_all_a_team_members_with_status()
         
-        col1, col2 = st.columns([1, 1])
+        # col1, col2 = st.columns([1, 1])
         
+        # with col1:
+        #     st.markdown("**Active Members** (Currently receiving assignments)")
+        #     active_members = members_df[members_df['is_active'] == True]
+            
+        #     if not active_members.empty:
+        #         for _, member in active_members.iterrows():
+        #             col_a, col_b = st.columns([4, 1.5])
+        #             with col_a:
+        #                 st.write(f"✅ {member['full_name']} ({member['email']})")
+        #             with col_b:
+        #                 if st.button("Deactivate", key=f"deactivate_{member['email']}", type="secondary"):
+        #                     success = toggle_a_team_member_status(member['email'], False)
+        #                     if success:
+        #                         st.success(f"Deactivated {member['full_name']}")
+        #                         st.rerun()
+        #                     else:
+        #                         st.error("Failed to deactivate member")
+                                
+        #                 # if st.button("Deactivate", key=f"deactivate_{member['email']}"):
+        #                 #     toggle_a_team_member_status(member['email'], False)
+        #                 #     st.success(f"Deactivated {member['full_name']}")
+        #                 #     st.rerun()
+        #     else:
+        #         st.info("No active members")
+        
+        # with col2:
+        #     st.markdown("**Inactive Members** (Not receiving new assignments)")
+        #     inactive_members = members_df[members_df['is_active'] == False]
+            
+        #     if not inactive_members.empty:
+        #         for _, member in inactive_members.iterrows():
+        #             col_a, col_b = st.columns([4, 1.5])
+        #             with col_a:
+        #                 st.write(f"⏸️ {member['full_name']} ({member['email']})")
+        #             with col_b:
+        #                 if st.button("Activate", key=f"activate_{member['email']}", type="primary"):
+        #                     success = toggle_a_team_member_status(member['email'], True)
+        #                     if success:
+        #                         st.success(f"Activated {member['full_name']}")
+        #                         st.rerun()
+        #                     else:
+        #                         st.error("Failed to activate member")
+        #                 # if st.button("Activate", key=f"activate_{member['email']}"):
+        #                 #     toggle_a_team_member_status(member['email'], True)
+        #                 #     st.success(f"Activated {member['full_name']}")
+        #                 #     st.rerun()
+        #     else:
+        #         st.info("No inactive members")
+        col1, col2 = st.columns([1, 1])
+    
         with col1:
             st.markdown("**Active Members** (Currently receiving assignments)")
-            active_members = members_df[members_df['is_active'] == True]
+            active_members = fresh_members_df[fresh_members_df['is_active'] == True]
             
             if not active_members.empty:
-                for _, member in active_members.iterrows():
-                    col_a, col_b = st.columns([4, 1.5])
+                for idx, member in active_members.iterrows():
+                    col_a, col_b = st.columns([4, 1])
                     with col_a:
                         st.write(f"✅ {member['full_name']} ({member['email']})")
                     with col_b:
-                        if st.button("Deactivate", key=f"deactivate_{member['email']}", type="secondary"):
-                            success = toggle_a_team_member_status(member['email'], False)
+                        if st.button("Deactivate", key=f"deactivate_{member['email']}_{idx}", type="secondary"):
+                            st.write(f"Attempting to deactivate {member['email']}...")
+                            
+                            # Try the SQL version first (most reliable)
+                            from db import toggle_a_team_member_status_sql
+                            success = toggle_a_team_member_status_sql(member['email'], False)
+                            
                             if success:
-                                st.success(f"Deactivated {member['full_name']}")
+                                st.success(f"✅ Deactivated {member['full_name']}")
+                                st.balloons()
                                 st.rerun()
                             else:
-                                st.error("Failed to deactivate member")
-                                
-                        # if st.button("Deactivate", key=f"deactivate_{member['email']}"):
-                        #     toggle_a_team_member_status(member['email'], False)
-                        #     st.success(f"Deactivated {member['full_name']}")
-                        #     st.rerun()
+                                st.error(f"❌ Failed to deactivate member. Check console logs.")
             else:
                 st.info("No active members")
         
         with col2:
             st.markdown("**Inactive Members** (Not receiving new assignments)")
-            inactive_members = members_df[members_df['is_active'] == False]
+            inactive_members = fresh_members_df[fresh_members_df['is_active'] == False]
             
             if not inactive_members.empty:
-                for _, member in inactive_members.iterrows():
-                    col_a, col_b = st.columns([4, 1.5])
+                for idx, member in inactive_members.iterrows():
+                    col_a, col_b = st.columns([4, 1])
                     with col_a:
                         st.write(f"⏸️ {member['full_name']} ({member['email']})")
                     with col_b:
-                        if st.button("Activate", key=f"activate_{member['email']}", type="primary"):
-                            success = toggle_a_team_member_status(member['email'], True)
+                        if st.button("Activate", key=f"activate_{member['email']}_{idx}", type="primary"):
+                            st.write(f"Attempting to activate {member['email']}...")
+                            
+                            # Try the SQL version first (most reliable)
+                            from db import toggle_a_team_member_status_sql
+                            success = toggle_a_team_member_status_sql(member['email'], True)
+                            
                             if success:
-                                st.success(f"Activated {member['full_name']}")
+                                st.success(f"✅ Activated {member['full_name']}")
+                                st.balloons()
                                 st.rerun()
                             else:
-                                st.error("Failed to activate member")
-                        # if st.button("Activate", key=f"activate_{member['email']}"):
-                        #     toggle_a_team_member_status(member['email'], True)
-                        #     st.success(f"Activated {member['full_name']}")
-                        #     st.rerun()
+                                st.error(f"❌ Failed to activate member. Check console logs.")
             else:
                 st.info("No inactive members")
 

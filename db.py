@@ -529,12 +529,22 @@ def toggle_a_team_member_status(email, is_active):
         email: Email of the A-Team member
         is_active: Boolean - True to activate, False to deactivate
     """
-    with get_session() as session:
-        member = session.query(ATeamMember).filter_by(email=email).first()
-        if member:
-            member.is_active = is_active
-            session.commit()
-            return True
+    try:
+        with get_session() as session:
+            member = session.query(ATeamMember).filter_by(email=email).first()
+            if member:
+                member.is_active = is_active
+                session.commit()
+                session.flush()  # Ensure changes are written
+                print(f"✅ Toggled {email} to is_active={is_active}")
+                return True
+            else:
+                print(f"❌ Member {email} not found")
+                return False
+    except Exception as e:
+        print(f"❌ Error toggling status: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def get_active_a_team_members():
@@ -549,6 +559,7 @@ def get_active_a_team_members():
 
 def get_all_a_team_members_with_status():
     """Get all A-Team members with their active status"""
+    # import pandas as pd
     with get_session() as session:
         members = session.query(ATeamMember).all()
         return pd.DataFrame([{
@@ -557,6 +568,96 @@ def get_all_a_team_members_with_status():
             'is_active': m.is_active if hasattr(m, 'is_active') else True
         } for m in members])
 
+
+def toggle_a_team_member_status_direct(email, is_active):
+    """
+    Toggle the active status of an A-Team member using direct session
+    
+    Args:
+        email: Email of the A-Team member
+        is_active: Boolean - True to activate, False to deactivate
+    """
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DB_FILE = os.path.join(BASE_DIR, "database", "fta.db")
+    DB_PATH = f"sqlite:///{DB_FILE}"
+    
+    engine = create_engine(DB_PATH, connect_args={"check_same_thread": False})
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    
+    try:
+        member = session.query(ATeamMember).filter_by(email=email).first()
+        
+        if member:
+            print(f"Found member: {member.email}, current status: {member.is_active}")
+            member.is_active = is_active
+            session.commit()
+            print(f"Updated {email} to is_active={is_active}")
+            
+            # Verify the change
+            session.refresh(member)
+            print(f"Verified: {member.email} is now is_active={member.is_active}")
+            
+            return True
+        else:
+            print(f"Member {email} not found in database")
+            return False
+            
+    except Exception as e:
+        print(f"Error toggling status: {e}")
+        import traceback
+        traceback.print_exc()
+        session.rollback()
+        return False
+    finally:
+        session.close()
+
+
+# Even simpler version using raw SQL
+def toggle_a_team_member_status_sql(email, is_active):
+    """
+    Toggle using raw SQL - most reliable method
+    """
+    import sqlite3
+    
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DB_FILE = os.path.join(BASE_DIR, "database", "fta.db")
+    
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        
+        # Check if member exists
+        cursor.execute("SELECT email, is_active FROM a_team_members WHERE email = ?", (email,))
+        result = cursor.fetchone()
+        
+        if result:
+            print(f"Current status for {email}: {result[1]}")
+            
+            # Update the status
+            cursor.execute(
+                "UPDATE a_team_members SET is_active = ? WHERE email = ?",
+                (1 if is_active else 0, email)
+            )
+            conn.commit()
+            
+            # Verify
+            cursor.execute("SELECT is_active FROM a_team_members WHERE email = ?", (email,))
+            new_status = cursor.fetchone()[0]
+            print(f"New status for {email}: {new_status}")
+            
+            conn.close()
+            return True
+        else:
+            print(f"Member {email} not found")
+            conn.close()
+            return False
+            
+    except Exception as e:
+        print(f"Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
 # ============ AUTH ============
 
 def authenticate_user(email, password):

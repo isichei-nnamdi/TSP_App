@@ -521,6 +521,42 @@ def add_user_to_a_team_if_needed(user: User, session: Session):
             full_name = user.name or user.email.split("@")[0].split(".")[0].capitalize()
             session.add(ATeamMember(email=user.email, full_name=full_name))
 
+def toggle_a_team_member_status(email, is_active):
+    """
+    Toggle the active status of an A-Team member
+    
+    Args:
+        email: Email of the A-Team member
+        is_active: Boolean - True to activate, False to deactivate
+    """
+    with get_session() as session:
+        member = session.query(ATeamMember).filter_by(email=email).first()
+        if member:
+            member.is_active = is_active
+            session.commit()
+            return True
+        return False
+
+def get_active_a_team_members():
+    """Get only active A-Team members"""
+    with get_session() as session:
+        members = session.query(ATeamMember).filter_by(is_active=True).all()
+        return pd.DataFrame([{
+            'email': m.email,
+            'full_name': m.full_name,
+            'is_active': m.is_active
+        } for m in members])
+
+def get_all_a_team_members_with_status():
+    """Get all A-Team members with their active status"""
+    with get_session() as session:
+        members = session.query(ATeamMember).all()
+        return pd.DataFrame([{
+            'email': m.email,
+            'full_name': m.full_name,
+            'is_active': m.is_active if hasattr(m, 'is_active') else True
+        } for m in members])
+
 # ============ AUTH ============
 
 def authenticate_user(email, password):
@@ -952,3 +988,90 @@ def sync_and_assign_fta_responses(gsheet_url):
     return df
 
 
+def get_available_a_team_members():
+    """
+    Get only active A-Team members who are available for new assignments
+    """
+    with get_session() as session:
+        active_members = session.query(ATeamMember).filter_by(is_active=True).all()
+        return [member.email for member in active_members]
+
+def assign_ftas_to_active_members(fta_list):
+    """
+    Distribute FTAs only among active A-Team members
+    
+    Args:
+        fta_list: List of FTA records to assign
+    
+    Returns:
+        Dictionary mapping FTA IDs to assigned member emails
+    """
+    with get_session() as session:
+        # Get active members only
+        active_members = session.query(ATeamMember).filter_by(is_active=True).all()
+        
+        if not active_members:
+            raise ValueError("No active A-Team members available for assignment")
+        
+        # Get current assignment counts for active members only
+        active_emails = [m.email for m in active_members]
+        assignment_counts = (
+            session.query(
+                FtaAssignments.assigned_to,
+                func.count(FtaAssignments.id).label('count')
+            )
+            .filter(FtaAssignments.assigned_to.in_(active_emails))
+            .group_by(FtaAssignments.assigned_to)
+            .all()
+        )
+        
+        # Create count dictionary
+        counts = {email: 0 for email in active_emails}
+        for email, count in assignment_counts:
+            counts[email] = count
+        
+        # Sort members by current assignment count (least assigned first)
+        sorted_members = sorted(counts.items(), key=lambda x: x[1])
+        
+        # Distribute FTAs
+        assignments = {}
+        member_index = 0
+        
+        for fta in fta_list:
+            assigned_email = sorted_members[member_index][0]
+            assignments[fta['id']] = assigned_email
+            
+            # Update count for next iteration
+            sorted_members[member_index] = (assigned_email, sorted_members[member_index][1] + 1)
+            sorted_members.sort(key=lambda x: x[1])  # Re-sort after increment
+            
+            # Move to next member (round-robin style)
+            member_index = (member_index + 1) % len(sorted_members)
+        
+        return assignments
+
+# Example usage in your assignment workflow:
+def process_fta_assignments(uploaded_ftas):
+    """
+    Process FTA assignments - only assigns to active members
+    """
+    try:
+        assignments = assign_ftas_to_active_members(uploaded_ftas)
+        
+        with get_session() as session:
+            for fta_id, email in assignments.items():
+                assignment = FtaAssignments(
+                    fta_id=fta_id,
+                    assigned_to=email,
+                    assigned_at=datetime.now()
+                    # ... other fields
+                )
+                session.add(assignment)
+            session.commit()
+        
+        return True, f"Successfully assigned {len(assignments)} FTAs to active members"
+    
+    except ValueError as e:
+        return False, str(e)
+    except Exception as e:
+        return False, f"Assignment failed: {str(e)}"

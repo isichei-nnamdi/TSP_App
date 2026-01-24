@@ -1,9 +1,284 @@
+# import streamlit as st
+# import pandas as pd
+# # import sqlite3
+# import plotly.graph_objects as go
+# from datetime import datetime
+# from db import get_all_a_team_members, add_a_team_member, get_email_logs, clear_email_logs, delete_failed_email_logs, resend_failed_emails
+# from reset_db import reset_database
+# import os
+# from sqlalchemy import select
+# from sqlalchemy import create_engine
+# from sqlalchemy.orm import sessionmaker
+# from models import FtaAssignments, ATeamMember, Feedback
+# from sqlalchemy import func
+# from db_session import get_session
+
+
+# # ---------------------------------------------------------------------
+# #  TEAM PAGE  ── Filters: Date range  +  A‑Team member  +  Reset button
+# # ---------------------------------------------------------------------
+# def show_team_page(go_to):
+#     # ---------------------------------------------------------------
+#     # 1) LOAD DATA SAFELY FROM SESSION_STATE
+#     # ---------------------------------------------------------------
+#     if st.session_state.get("role") != "Admin":
+#         st.error("You are not authorized to view this page.")
+#         st.stop()
+
+    
+
+#     # Absolute path to the database file
+#     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+#     DB_FILE = os.path.join(BASE_DIR, "database", "fta.db")
+#     st.write(f"Using SQLite database at: {DB_FILE}")  # Debug: print actual path
+
+#     # Create the database folder if it doesn’t exist
+#     os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
+
+#     # SQLAlchemy connection string
+#     DB_PATH = f"sqlite:///{DB_FILE}"
+#     engine = create_engine(DB_PATH, connect_args={"check_same_thread": False})
+
+#     # Create session factory
+#     Session = sessionmaker(bind=engine)
+#     session = Session()
+    
+#     # # Read the file in binary mode
+#     # with open(DB_PATH, "rb") as f:
+#     #     db_bytes = f.read()
+    
+#     # # Provide download button in the app
+#     # st.download_button(
+#     #     label="Download SQLite Database",
+#     #     data=db_bytes,
+#     #     file_name="fta.db",
+#     #     mime="application/octet-stream"
+#     # )
+    
+#     st.markdown("### 👥 A-Team Management")
+
+#     col1, col2 = st.columns(2)
+#     with col1:
+#         st.write(" ")
+#         st.write(" ")
+#         # === Add new member ===
+#         with st.expander("➕ Add New A-Team Member"):
+#             email = st.text_input("Email")
+#             full_name = st.text_input("Full Name")
+#             create_login = st.checkbox("Also create login account with default password")
+#             if st.button("Add Member"):
+#                 if email and full_name:
+#                     add_a_team_member(email, full_name)
+#                     if create_login:
+#                         from db import add_user
+#                         add_user(email, "password1234", role="A-Team")
+#                     st.success("Member added successfully!")
+#                     st.rerun()
+#                 else:
+#                     st.warning("Please enter both email and full name.")
+
+#         # === Load members
+#         members_df = get_all_a_team_members()
+
+#         # === Load FTA count
+#         fta_count = (
+#             session.query(
+#                 FtaAssignments.assigned_to.label("email"),
+#                 func.count(FtaAssignments.id).label("fta_count")
+#             )
+#             .group_by(FtaAssignments.assigned_to)
+#             .all()
+#         )
+#         fta_counts = pd.DataFrame(fta_count, columns=["email", "fta_count"])
+#         assignments_df = pd.read_sql(select(FtaAssignments), session.bind)
+
+#         # Merge carefully
+#         members_df = pd.merge(members_df, fta_counts, on="email", how="left")
+#         members_df["fta_count"] = members_df["fta_count"].fillna(0).astype(int)
+
+#     with col2:
+#         # === Search/Filter ===
+#         search = st.text_input("🔍 Search by email or name", placeholder="🔍 Search by email or name", label_visibility="hidden").lower()
+#         filtered_df = members_df[members_df.apply(
+#             lambda row: search in row["email"].lower() or search in row["full_name"].lower(), axis=1
+#         )] if search else members_df
+
+#     # --- Load members and assignments ---
+#     assignments_df = pd.read_sql(select(FtaAssignments), session.bind)
+#     all_feedback = pd.read_sql(select(Feedback), session.bind)
+
+    
+#     if all_feedback.empty:
+#         st.write("✅ No feedback has been submitted yet.")
+#         contacted_ids = []
+#     else:
+#         all_feedback["submitted_at"] = pd.to_datetime(all_feedback["submitted_at"], errors="coerce")
+#         all_feedback["Feedback_id"] = all_feedback["fta_id"] + " - " + all_feedback["call_type"]
+#         contacted_ids = all_feedback["fta_id"].unique()
+
+
+#     st.markdown("---")
+
+#     st.markdown("##### Summary of Assigned & Contacted Calls")
+
+#     col1, col2, col3, col4 = st.columns([2, 1, 1, 1.5])
+#     with col1:
+#         st.write("")
+#     with col2:
+#         # Ensure assigned_at column is datetime
+#         # Store as string
+#         min_date_str = "01/01/2025"
+        
+#         assignments_df["assigned_at"] = pd.to_datetime(assignments_df["assigned_at"], errors="coerce")
+#         # Convert to date object if needed
+#         min_date = datetime.strptime(min_date_str, "%m/%d/%Y").date()
+#         # min_date = assignments_df["assigned_at"].min().date() if not assignments_df["assigned_at"].isna().all() else datetime.today().date()
+#         max_date = datetime.today().date() # all_feedback["submitted_at"].max().date() if not all_feedback["submitted_at"].isna().all() else
+#         start_date = st.date_input("Start Date",
+#                                 value=min_date,
+#                                 min_value=min_date,
+#                                 max_value=max_date,
+#                                 key="start_date")
+#     with col3:
+#         end_date = st.date_input("End Date",
+#                                 value=max_date,
+#                                 min_value=min_date,
+#                                 max_value=max_date,
+#                                 key="end_date")
+#     with col4:
+#         selected_member = st.selectbox(
+#         label="Filter by A-Team Member",
+#         options=["All"] + assignments_df["assigned_to"].dropna().drop_duplicates().tolist()
+#     )
+
+#     # Filter by date
+#     filtered_df = assignments_df[
+#         (assignments_df["assigned_at"].dt.date >= start_date) &
+#         (assignments_df["assigned_at"].dt.date <= end_date)
+#     ]
+
+#     # Filter by selected A-Team member
+#     if selected_member != "All":
+#         filtered_df = filtered_df[filtered_df["assigned_to"] == selected_member]
+
+
+#     # --- Compute assignment summary ---
+#     summary_data = []
+
+#     for _, member in members_df.iterrows():
+#         email = member["email"]
+#         if member.get("name"):
+#             full_name = member["name"]
+#         else:
+#             full_name = email.split("@")[0].split(".")[0].capitalize()
+      
+
+#         # Get all assignments for the current member
+#         member_ftas = filtered_df[filtered_df["assigned_to"] == email]
+#         total = len(member_ftas)
+#         contacted = member_ftas["fta_id"].isin(contacted_ids).sum()
+#         not_contacted = total - contacted
+
+#         summary_data.append({
+#             "Email": email,
+#             "Name": full_name,
+#             "Total Assigned": total,
+#             "Contacted": contacted,
+#             "Not Contacted": not_contacted
+#         })
+
+#     # --- Convert to DataFrame and show ---
+#     expected_cols = ["Email", "Name", "Total Assigned", "Contacted", "Not Contacted"]
+#     summary_df = pd.DataFrame(summary_data)
+
+#     # Ensure DataFrame has the expected columns
+#     for col in expected_cols:
+#         if col not in summary_df.columns:
+#             summary_df[col] = 0
+
+#     # Compute totals safely
+#     total_assigned = summary_df["Total Assigned"].sum()
+#     total_contacted = summary_df["Contacted"].sum()
+#     total_not_contacted = summary_df["Not Contacted"].sum()
+
+#     # Define styles
+#     card_style = """
+#         <style>
+#         .card-container {
+#             display: flex;
+#             justify-content: space-between;
+#             gap: 20px;
+#         }
+#         .card {
+#             flex: 1;
+#             padding: 20px;
+#             border-radius: 12px;
+#             color: white;
+#             font-family: Arial, sans-serif;
+#             box-shadow: 2px 2px 12px rgba(0,0,0,0.1);
+#             display: flex;
+#             flex-direction: column;
+#             justify-content: space-between;
+#             min-height: 120px;
+#         }
+#         .card-red {
+#             background-color: #a00000;
+#         }
+#         .card-yellow {
+#             background-color: #ffe640;
+#             color: black;
+#         }
+#         .card-icon {
+#             display: flex;
+#             justify-content: space-between;
+#             align-items: center;
+#             font-size: 14px;
+#             font-weight: 500;
+#         }
+#         .card-value {
+#             font-size: 32px;
+#             font-weight: bold;
+#             margin-top: 5px;
+#         }
+#         </style>
+#     """
+
+#     card_html = f"""
+#     <div class="card-container">
+#         <div class="card card-red">
+#             <div class="card-icon">Assigned FTAs<span>📅</span></div>
+#             <div class="card-value">{total_assigned}</div>
+#         </div>
+#         <div class="card card-yellow">
+#             <div class="card-icon">Contacted FTAs<span>✆✉</span></div>
+#             <div class="card-value">{total_contacted}</div>
+#         </div>
+#         <div class="card card-red">
+#             <div class="card-icon">Not Contacted FTAs<span>👎</span></div>
+#             <div class="card-value">{total_not_contacted}</div>
+#         </div>
+#     </div>
+#     """
+
+#     st.markdown(card_style, unsafe_allow_html=True)
+#     st.markdown(card_html, unsafe_allow_html=True)
+
+#     st.write("")
+#     st.write("")
+
+#     if selected_member == "All":
+#         st.dataframe(summary_df, use_container_width=True)
+#     else:
+#         st.dataframe(summary_df[summary_df["Email"] == selected_member], use_container_width=True)
+#     st.markdown("---")
+
 import streamlit as st
 import pandas as pd
-# import sqlite3
 import plotly.graph_objects as go
 from datetime import datetime
-from db import get_all_a_team_members, add_a_team_member, get_email_logs, clear_email_logs, delete_failed_email_logs, resend_failed_emails
+from db import (get_all_a_team_members, add_a_team_member, get_email_logs, 
+                clear_email_logs, delete_failed_email_logs, resend_failed_emails,
+                toggle_a_team_member_status, get_all_a_team_members_with_status)
 from reset_db import reset_database
 import os
 from sqlalchemy import select
@@ -14,46 +289,21 @@ from sqlalchemy import func
 from db_session import get_session
 
 
-# ---------------------------------------------------------------------
-#  TEAM PAGE  ── Filters: Date range  +  A‑Team member  +  Reset button
-# ---------------------------------------------------------------------
 def show_team_page(go_to):
-    # ---------------------------------------------------------------
-    # 1) LOAD DATA SAFELY FROM SESSION_STATE
-    # ---------------------------------------------------------------
     if st.session_state.get("role") != "Admin":
         st.error("You are not authorized to view this page.")
         st.stop()
 
-    
-
-    # Absolute path to the database file
+    # Database setup
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     DB_FILE = os.path.join(BASE_DIR, "database", "fta.db")
-    st.write(f"Using SQLite database at: {DB_FILE}")  # Debug: print actual path
-
-    # Create the database folder if it doesn’t exist
+    st.write(f"Using SQLite database at: {DB_FILE}")
     os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
 
-    # SQLAlchemy connection string
     DB_PATH = f"sqlite:///{DB_FILE}"
     engine = create_engine(DB_PATH, connect_args={"check_same_thread": False})
-
-    # Create session factory
     Session = sessionmaker(bind=engine)
     session = Session()
-    
-    # # Read the file in binary mode
-    # with open(DB_PATH, "rb") as f:
-    #     db_bytes = f.read()
-    
-    # # Provide download button in the app
-    # st.download_button(
-    #     label="Download SQLite Database",
-    #     data=db_bytes,
-    #     file_name="fta.db",
-    #     mime="application/octet-stream"
-    # )
     
     st.markdown("### 👥 A-Team Management")
 
@@ -77,8 +327,8 @@ def show_team_page(go_to):
                 else:
                     st.warning("Please enter both email and full name.")
 
-        # === Load members
-        members_df = get_all_a_team_members()
+        # === Load members with status
+        members_df = get_all_a_team_members_with_status()
 
         # === Load FTA count
         fta_count = (
@@ -103,11 +353,50 @@ def show_team_page(go_to):
             lambda row: search in row["email"].lower() or search in row["full_name"].lower(), axis=1
         )] if search else members_df
 
+    # === Manage Active/Inactive Status ===
+    st.markdown("---")
+    st.markdown("##### 🔄 Manage A-Team Member Availability")
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        st.markdown("**Active Members** (Currently receiving assignments)")
+        active_members = members_df[members_df['is_active'] == True]
+        
+        if not active_members.empty:
+            for _, member in active_members.iterrows():
+                col_a, col_b = st.columns([4, 1])
+                with col_a:
+                    st.write(f"✅ {member['full_name']} ({member['email']})")
+                with col_b:
+                    if st.button("Deactivate", key=f"deactivate_{member['email']}"):
+                        toggle_a_team_member_status(member['email'], False)
+                        st.success(f"Deactivated {member['full_name']}")
+                        st.rerun()
+        else:
+            st.info("No active members")
+    
+    with col2:
+        st.markdown("**Inactive Members** (Not receiving new assignments)")
+        inactive_members = members_df[members_df['is_active'] == False]
+        
+        if not inactive_members.empty:
+            for _, member in inactive_members.iterrows():
+                col_a, col_b = st.columns([4, 1])
+                with col_a:
+                    st.write(f"⏸️ {member['full_name']} ({member['email']})")
+                with col_b:
+                    if st.button("Activate", key=f"activate_{member['email']}"):
+                        toggle_a_team_member_status(member['email'], True)
+                        st.success(f"Activated {member['full_name']}")
+                        st.rerun()
+        else:
+            st.info("No inactive members")
+
     # --- Load members and assignments ---
     assignments_df = pd.read_sql(select(FtaAssignments), session.bind)
     all_feedback = pd.read_sql(select(Feedback), session.bind)
 
-    
     if all_feedback.empty:
         st.write("✅ No feedback has been submitted yet.")
         contacted_ids = []
@@ -116,40 +405,33 @@ def show_team_page(go_to):
         all_feedback["Feedback_id"] = all_feedback["fta_id"] + " - " + all_feedback["call_type"]
         contacted_ids = all_feedback["fta_id"].unique()
 
-
     st.markdown("---")
-
     st.markdown("##### Summary of Assigned & Contacted Calls")
 
     col1, col2, col3, col4 = st.columns([2, 1, 1, 1.5])
     with col1:
         st.write("")
     with col2:
-        # Ensure assigned_at column is datetime
-        # Store as string
         min_date_str = "01/01/2025"
-        
         assignments_df["assigned_at"] = pd.to_datetime(assignments_df["assigned_at"], errors="coerce")
-        # Convert to date object if needed
         min_date = datetime.strptime(min_date_str, "%m/%d/%Y").date()
-        # min_date = assignments_df["assigned_at"].min().date() if not assignments_df["assigned_at"].isna().all() else datetime.today().date()
-        max_date = datetime.today().date() # all_feedback["submitted_at"].max().date() if not all_feedback["submitted_at"].isna().all() else
-        start_date = st.date_input("Start Date",
+        max_date = datetime.today().date()
+        start_date = st.date_input("Start Date",
                                 value=min_date,
                                 min_value=min_date,
                                 max_value=max_date,
                                 key="start_date")
     with col3:
-        end_date = st.date_input("End Date",
+        end_date = st.date_input("End Date",
                                 value=max_date,
                                 min_value=min_date,
                                 max_value=max_date,
                                 key="end_date")
     with col4:
         selected_member = st.selectbox(
-        label="Filter by A-Team Member",
-        options=["All"] + assignments_df["assigned_to"].dropna().drop_duplicates().tolist()
-    )
+            label="Filter by A-Team Member",
+            options=["All"] + assignments_df["assigned_to"].dropna().drop_duplicates().tolist()
+        )
 
     # Filter by date
     filtered_df = assignments_df[
@@ -161,8 +443,7 @@ def show_team_page(go_to):
     if selected_member != "All":
         filtered_df = filtered_df[filtered_df["assigned_to"] == selected_member]
 
-
-    # --- Compute assignment summary ---
+    # --- Compute assignment summary (showing ALL members including inactive) ---
     summary_data = []
 
     for _, member in members_df.iterrows():
@@ -171,30 +452,36 @@ def show_team_page(go_to):
             full_name = member["name"]
         else:
             full_name = email.split("@")[0].split(".")[0].capitalize()
-      
 
         # Get all assignments for the current member
         member_ftas = filtered_df[filtered_df["assigned_to"] == email]
         total = len(member_ftas)
         contacted = member_ftas["fta_id"].isin(contacted_ids).sum()
         not_contacted = total - contacted
+        
+        # Add status indicator
+        status = "🟢 Active" if member.get('is_active', True) else "🔴 Inactive"
 
         summary_data.append({
             "Email": email,
             "Name": full_name,
+            "Status": status,
             "Total Assigned": total,
             "Contacted": contacted,
             "Not Contacted": not_contacted
         })
 
     # --- Convert to DataFrame and show ---
-    expected_cols = ["Email", "Name", "Total Assigned", "Contacted", "Not Contacted"]
+    expected_cols = ["Email", "Name", "Status", "Total Assigned", "Contacted", "Not Contacted"]
     summary_df = pd.DataFrame(summary_data)
 
     # Ensure DataFrame has the expected columns
     for col in expected_cols:
         if col not in summary_df.columns:
-            summary_df[col] = 0
+            if col in ["Total Assigned", "Contacted", "Not Contacted"]:
+                summary_df[col] = 0
+            elif col == "Status":
+                summary_df[col] = "🟢 Active"
 
     # Compute totals safely
     total_assigned = summary_df["Total Assigned"].sum()
@@ -270,8 +557,6 @@ def show_team_page(go_to):
         st.dataframe(summary_df, use_container_width=True)
     else:
         st.dataframe(summary_df[summary_df["Email"] == selected_member], use_container_width=True)
-    st.markdown("---")
-
 
     # === Display Feedback Table ===
     st.markdown("##### 📝 All Feedback from A-Team Members")

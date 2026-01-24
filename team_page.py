@@ -357,6 +357,9 @@ def show_team_page(go_to):
     st.markdown("---")
     with st.expander("##### 🔄 Manage A-Team Member Availability"):
         # st.markdown("##### 🔄 Manage A-Team Member Availability")
+
+        # Reload members to get fresh status
+        fresh_members_df = get_all_a_team_members_with_status()
         
         col1, col2 = st.columns([1, 1])
         
@@ -370,10 +373,18 @@ def show_team_page(go_to):
                     with col_a:
                         st.write(f"✅ {member['full_name']} ({member['email']})")
                     with col_b:
-                        if st.button("Deactivate", key=f"deactivate_{member['email']}"):
-                            toggle_a_team_member_status(member['email'], False)
-                            st.success(f"Deactivated {member['full_name']}")
-                            st.rerun()
+                        if st.button("Deactivate", key=f"deactivate_{member['email']}", type="secondary"):
+                            success = toggle_a_team_member_status(member['email'], False)
+                            if success:
+                                st.success(f"Deactivated {member['full_name']}")
+                                st.rerun()
+                            else:
+                                st.error("Failed to deactivate member")
+                                
+                        # if st.button("Deactivate", key=f"deactivate_{member['email']}"):
+                        #     toggle_a_team_member_status(member['email'], False)
+                        #     st.success(f"Deactivated {member['full_name']}")
+                        #     st.rerun()
             else:
                 st.info("No active members")
         
@@ -387,10 +398,17 @@ def show_team_page(go_to):
                     with col_a:
                         st.write(f"⏸️ {member['full_name']} ({member['email']})")
                     with col_b:
-                        if st.button("Activate", key=f"activate_{member['email']}"):
-                            toggle_a_team_member_status(member['email'], True)
-                            st.success(f"Activated {member['full_name']}")
-                            st.rerun()
+                        if st.button("Activate", key=f"activate_{member['email']}", type="primary"):
+                            success = toggle_a_team_member_status(member['email'], True)
+                            if success:
+                                st.success(f"Activated {member['full_name']}")
+                                st.rerun()
+                            else:
+                                st.error("Failed to activate member")
+                        # if st.button("Activate", key=f"activate_{member['email']}"):
+                        #     toggle_a_team_member_status(member['email'], True)
+                        #     st.success(f"Activated {member['full_name']}")
+                        #     st.rerun()
             else:
                 st.info("No inactive members")
 

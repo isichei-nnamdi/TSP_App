@@ -419,23 +419,20 @@ def show_team_page(go_to):
             
             if not active_members.empty:
                 for idx, member in active_members.iterrows():
-                    col_a, col_b = st.columns([4, 1])
+                    col_a, col_b = st.columns([4, 1.5])
                     with col_a:
                         st.write(f"✅ {member['full_name']} ({member['email']})")
                     with col_b:
                         if st.button("Deactivate", key=f"deactivate_{member['email']}_{idx}", type="secondary"):
                             st.write(f"Attempting to deactivate {member['email']}...")
                             
-                            # Try the SQL version first (most reliable)
-                            # from db import toggle_a_team_member_status_sql
                             from db import toggle_a_team_member_status_direct
-                            # success = toggle_a_team_member_status_sql(member['email'], False)
                             success = toggle_a_team_member_status_direct(member['email'], False)
                             
                             if success:
                                 st.success(f"✅ Deactivated {member['full_name']}")
                                 st.balloons()
-                                # st.rerun()
+                                st.rerun()
                             else:
                                 st.error(f"❌ Failed to deactivate member. Check console logs.")
             else:
@@ -447,16 +444,15 @@ def show_team_page(go_to):
             
             if not inactive_members.empty:
                 for idx, member in inactive_members.iterrows():
-                    col_a, col_b = st.columns([4, 1])
+                    col_a, col_b = st.columns([4, 1.5])
                     with col_a:
                         st.write(f"⏸️ {member['full_name']} ({member['email']})")
                     with col_b:
                         if st.button("Activate", key=f"activate_{member['email']}_{idx}", type="primary"):
                             st.write(f"Attempting to activate {member['email']}...")
                             
-                            # Try the SQL version first (most reliable)
-                            from db import toggle_a_team_member_status_sql
-                            success = toggle_a_team_member_status_sql(member['email'], True)
+                            from db import toggle_a_team_member_status_direct
+                            success = toggle_a_team_member_status_direct(member['email'], False)
                             
                             if success:
                                 st.success(f"✅ Activated {member['full_name']}")

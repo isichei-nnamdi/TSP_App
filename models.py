@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Float
+from sqlalchemy import Boolean, Column, Integer, String, Text, DateTime, ForeignKey, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -101,6 +101,7 @@ class ATeamMember(Base):
 
     email = Column(String, primary_key=True)
     full_name = Column(String)
+    is_active = Column(Boolean, default=True)
 
 
 class AssignmentTracker(Base):

@@ -365,7 +365,7 @@ def show_team_page(go_to):
         
         if not active_members.empty:
             for _, member in active_members.iterrows():
-                col_a, col_b = st.columns([4, 1])
+                col_a, col_b = st.columns([4, 1.5])
                 with col_a:
                     st.write(f"✅ {member['full_name']} ({member['email']})")
                 with col_b:

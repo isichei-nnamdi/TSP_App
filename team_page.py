@@ -320,8 +320,8 @@ def show_team_page(go_to):
                 if email and full_name:
                     add_a_team_member(email, full_name)
                     if create_login:
-                        from db import add_user
-                        add_user(email, "password1234", role="A-Team")
+                        from db import add_user_to_a_team_if_needed
+                        add_user_to_a_team_if_needed(email, "password1234", role="A-Team")
                     st.success("Member added successfully!")
                     st.rerun()
                 else:

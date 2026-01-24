@@ -452,7 +452,7 @@ def show_team_page(go_to):
                             st.write(f"Attempting to activate {member['email']}...")
                             
                             from db import toggle_a_team_member_status_direct
-                            success = toggle_a_team_member_status_direct(member['email'], False)
+                            success = toggle_a_team_member_status_direct(member['email'], True)
                             
                             if success:
                                 st.success(f"✅ Activated {member['full_name']}")

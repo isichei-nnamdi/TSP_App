@@ -433,7 +433,7 @@ def show_team_page(go_to):
                             if success:
                                 st.success(f"✅ Deactivated {member['full_name']}")
                                 st.balloons()
-                                st.rerun()
+                                # st.rerun()
                             else:
                                 st.error(f"❌ Failed to deactivate member. Check console logs.")
             else:

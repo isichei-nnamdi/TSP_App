@@ -895,75 +895,269 @@ def get_existing_assignments():
         "assigned_at": a.assigned_at
     } for a in assignments])
 
+def get_active_a_team_members_for_assignment():
+    """
+    Get ONLY active A-Team members for new FTA assignments.
+    Returns list of User objects (not just emails).
+    """
+    with get_session() as session:
+        # Get active member emails from a_team_members table
+        active_members = session.query(ATeamMember).filter_by(is_active=True).all()
+        active_emails = [m.email for m in active_members]
+        
+        if not active_emails:
+            return []
+        
+        # Get corresponding User objects (needed for assignment logic)
+        users = session.query(User).filter(
+            User.email.in_(active_emails),
+            User.role == "A-Team"
+        ).all()
+        
+        return [user for user in users]
+    
+
+
+# def assign_new_ftas(fta_df):
+#     fta_df.columns = fta_df.columns.str.strip()
+
+#     # Ensure the FTA ID column exists in the sheet data
+#     if "FTA ID" not in fta_df.columns:
+#         raise ValueError("Missing 'FTA ID' column in FTA data (Google Sheet).")
+
+#     # Get existing assignments from DB (empty if none)
+#     try:
+#         existing_assignments = get_existing_assignments()
+#         assigned_ids = set(existing_assignments['fta_id']) if not existing_assignments.empty else set()
+#     except Exception as e:
+#         print(f"[Assign Info] No existing assignments found: {e}")
+#         assigned_ids = set()
+
+#     # Only assign FTAs that are not already assigned
+#     unassigned_ftas = fta_df[~fta_df['FTA ID'].isin(assigned_ids)].copy()
+#     if unassigned_ftas.empty:
+#         print("[Assign Info] No unassigned FTAs found.")
+#         return existing_assignments
+
+#     db = SessionLocal()
+
+#     # Get A-Team members
+#     members = db.query(User).filter(User.role == "A-Team").all()
+#     member_count = len(members)
+#     if member_count == 0:
+#         db.close()
+#         raise Exception("No A-Team members available for assignment.")
+
+#     # Get last assigned index for round-robin distribution
+#     tracker = db.query(AssignmentTracker).filter_by(id=1).first()
+#     last_index = tracker.last_assigned_index if tracker else -1
+
+#     assignments = []
+#     current_index = (last_index + 1) % member_count
+
+#     for _, row in unassigned_ftas.iterrows():
+#         assigned_to_user = members[current_index]
+#         assignment = FtaAssignments(
+#             fta_id=row["FTA ID"],
+#             name=row.get("Full Name", "Unknown"),
+#             assigned_to=assigned_to_user.email,
+#             assigned_by=assigned_to_user.id,
+#             assigned_at=datetime.now()
+#         )
+#         assignments.append(assignment)
+#         current_index = (current_index + 1) % member_count
+
+#     try:
+#         db.add_all(assignments)
+
+#         # Update tracker
+#         if tracker:
+#             tracker.last_assigned_index = (current_index - 1) % member_count
+#         else:
+#             tracker = AssignmentTracker(id=1, last_assigned_index=(current_index - 1) % member_count)
+#             db.add(tracker)
+
+#         db.commit()
+#         print(f"[Assign Success] Assigned {len(assignments)} new FTAs.")
+#     except SQLAlchemyError as e:
+#         db.rollback()
+#         print(f"[DB Error] Assignment failed: {e}")
+#     finally:
+#         db.close()
+
+#     return get_existing_assignments()
 
 def assign_new_ftas(fta_df):
+    """
+    Assign new FTAs only to ACTIVE A-Team members using round-robin distribution.
+    Skips FTAs that are already assigned.
+    """
+    fta_df = fta_df.copy()
     fta_df.columns = fta_df.columns.str.strip()
 
-    # Ensure the FTA ID column exists in the sheet data
     if "FTA ID" not in fta_df.columns:
         raise ValueError("Missing 'FTA ID' column in FTA data (Google Sheet).")
 
-    # Get existing assignments from DB (empty if none)
+    # Normalize FTA IDs to strings
+    fta_df["FTA ID"] = fta_df["FTA ID"].astype(str).str.strip()
+
+    # Get existing assignments
     try:
         existing_assignments = get_existing_assignments()
-        assigned_ids = set(existing_assignments['fta_id']) if not existing_assignments.empty else set()
+        assigned_ids = set(existing_assignments['fta_id'].astype(str)) if not existing_assignments.empty else set()
     except Exception as e:
         print(f"[Assign Info] No existing assignments found: {e}")
         assigned_ids = set()
 
-    # Only assign FTAs that are not already assigned
+    # Filter out already assigned FTAs
     unassigned_ftas = fta_df[~fta_df['FTA ID'].isin(assigned_ids)].copy()
+    
     if unassigned_ftas.empty:
         print("[Assign Info] No unassigned FTAs found.")
-        return existing_assignments
+        return get_existing_assignments()
 
     db = SessionLocal()
 
-    # Get A-Team members
-    members = db.query(User).filter(User.role == "A-Team").all()
-    member_count = len(members)
-    if member_count == 0:
-        db.close()
-        raise Exception("No A-Team members available for assignment.")
-
-    # Get last assigned index for round-robin distribution
-    tracker = db.query(AssignmentTracker).filter_by(id=1).first()
-    last_index = tracker.last_assigned_index if tracker else -1
-
-    assignments = []
-    current_index = (last_index + 1) % member_count
-
-    for _, row in unassigned_ftas.iterrows():
-        assigned_to_user = members[current_index]
-        assignment = FtaAssignments(
-            fta_id=row["FTA ID"],
-            name=row.get("Full Name", "Unknown"),
-            assigned_to=assigned_to_user.email,
-            assigned_by=assigned_to_user.id,
-            assigned_at=datetime.now()
-        )
-        assignments.append(assignment)
-        current_index = (current_index + 1) % member_count
-
     try:
+        # ✅ GET ONLY ACTIVE A-TEAM MEMBERS
+        active_members = get_active_a_team_members_for_assignment()
+        member_count = len(active_members)
+        
+        if member_count == 0:
+            db.close()
+            print("[Assign Error] ❌ No active A-Team members available for assignment.")
+            raise Exception("No active A-Team members available for assignment. Please activate at least one member.")
+
+        print(f"[Assign Info] Found {member_count} active A-Team member(s) for assignment.")
+        
+        # Get active member emails
+        active_emails = [m.email for m in active_members]
+
+        # Get assignment counts for ACTIVE members only
+        active_assignment_counts = (
+            db.query(
+                FtaAssignments.assigned_to,
+                func.count(FtaAssignments.id).label('count')
+            )
+            .filter(FtaAssignments.assigned_to.in_(active_emails))
+            .group_by(FtaAssignments.assigned_to)
+            .all()
+        )
+
+        # Create count dictionary for active members
+        counts = {email: 0 for email in active_emails}
+        for email, count in active_assignment_counts:
+            counts[email] = count
+
+        # Sort active members by current assignment count (least assigned first)
+        sorted_active = sorted(
+            [(m, counts.get(m.email, 0)) for m in active_members],
+            key=lambda x: x[1]
+        )
+
+        print(f"[Assign Info] Current assignment distribution among active members:")
+        for member, count in sorted_active:
+            print(f"  - {member.email}: {count} assignments")
+
+        current_index = 0
+        assignments = []
+
+        for _, row in unassigned_ftas.iterrows():
+            assigned_to_user = sorted_active[current_index][0]
+            
+            assignment = FtaAssignments(
+                fta_id=str(row["FTA ID"]).strip(),
+                name=row.get("Full Name", "Unknown"),
+                assigned_to=assigned_to_user.email,
+                assigned_by=assigned_to_user.id,
+                assigned_at=datetime.now()
+            )
+            assignments.append(assignment)
+            
+            print(f"[Assign] FTA {row['FTA ID']} → {assigned_to_user.email}")
+            
+            # Update count and re-sort
+            sorted_active[current_index] = (assigned_to_user, sorted_active[current_index][1] + 1)
+            sorted_active.sort(key=lambda x: x[1])
+            
+            current_index = (current_index + 1) % member_count
+
         db.add_all(assignments)
-
-        # Update tracker
-        if tracker:
-            tracker.last_assigned_index = (current_index - 1) % member_count
-        else:
-            tracker = AssignmentTracker(id=1, last_assigned_index=(current_index - 1) % member_count)
-            db.add(tracker)
-
         db.commit()
-        print(f"[Assign Success] Assigned {len(assignments)} new FTAs.")
+        print(f"[Assign Success] ✅ Assigned {len(assignments)} new FTAs to active members only.")
+        
     except SQLAlchemyError as e:
         db.rollback()
-        print(f"[DB Error] Assignment failed: {e}")
+        print(f"[DB Error] ❌ Assignment failed: {e}")
+        raise
     finally:
         db.close()
 
     return get_existing_assignments()
+
+
+def reassign_ftas_from_inactive_member(inactive_email):
+    """
+    Reassign all FTAs from an inactive member to active members.
+    Call this when deactivating a member with existing assignments.
+    """
+    with get_session() as session:
+        # Get all assignments for the inactive member
+        inactive_assignments = session.query(FtaAssignments).filter_by(
+            assigned_to=inactive_email
+        ).all()
+        
+        if not inactive_assignments:
+            print(f"[Reassign] No assignments found for {inactive_email}")
+            return 0
+        
+        # Get active members
+        active_members = get_active_a_team_members_for_assignment()
+        
+        if not active_members:
+            print("[Reassign Error] ❌ No active members available for reassignment")
+            raise Exception("No active members available to reassign FTAs")
+        
+        # Get current counts for active members
+        active_emails = [m.email for m in active_members]
+        counts_query = (
+            session.query(
+                FtaAssignments.assigned_to,
+                func.count(FtaAssignments.id).label('count')
+            )
+            .filter(FtaAssignments.assigned_to.in_(active_emails))
+            .group_by(FtaAssignments.assigned_to)
+            .all()
+        )
+        
+        counts = {email: 0 for email in active_emails}
+        for email, count in counts_query:
+            counts[email] = count
+        
+        # Sort by least assigned
+        sorted_members = sorted(counts.items(), key=lambda x: x[1])
+        
+        print(f"[Reassign] Reassigning {len(inactive_assignments)} FTAs from {inactive_email}")
+        
+        # Reassign each FTA
+        current_index = 0
+        for assignment in inactive_assignments:
+            new_assignee_email = sorted_members[current_index][0]
+            assignment.assigned_to = new_assignee_email
+            assignment.assigned_at = datetime.now()
+            
+            print(f"  - FTA {assignment.fta_id} → {new_assignee_email}")
+            
+            # Update count and re-sort
+            sorted_members[current_index] = (new_assignee_email, sorted_members[current_index][1] + 1)
+            sorted_members.sort(key=lambda x: x[1])
+            
+            current_index = (current_index + 1) % len(sorted_members)
+        
+        session.commit()
+        print(f"[Reassign Success] ✅ Reassigned all FTAs from {inactive_email}")
+        return len(inactive_assignments)
+
 
 
 def hash_pii(value):
@@ -1100,82 +1294,82 @@ def get_available_a_team_members():
         active_members = session.query(ATeamMember).filter_by(is_active=True).all()
         return [member.email for member in active_members]
 
-def assign_ftas_to_active_members(fta_list):
-    """
-    Distribute FTAs only among active A-Team members
+# def assign_ftas_to_active_members(fta_list):
+#     """
+#     Distribute FTAs only among active A-Team members
     
-    Args:
-        fta_list: List of FTA records to assign
+#     Args:
+#         fta_list: List of FTA records to assign
     
-    Returns:
-        Dictionary mapping FTA IDs to assigned member emails
-    """
-    with get_session() as session:
-        # Get active members only
-        active_members = session.query(ATeamMember).filter_by(is_active=True).all()
+#     Returns:
+#         Dictionary mapping FTA IDs to assigned member emails
+#     """
+#     with get_session() as session:
+#         # Get active members only
+#         active_members = session.query(ATeamMember).filter_by(is_active=True).all()
         
-        if not active_members:
-            raise ValueError("No active A-Team members available for assignment")
+#         if not active_members:
+#             raise ValueError("No active A-Team members available for assignment")
         
-        # Get current assignment counts for active members only
-        active_emails = [m.email for m in active_members]
-        assignment_counts = (
-            session.query(
-                FtaAssignments.assigned_to,
-                func.count(FtaAssignments.id).label('count')
-            )
-            .filter(FtaAssignments.assigned_to.in_(active_emails))
-            .group_by(FtaAssignments.assigned_to)
-            .all()
-        )
+#         # Get current assignment counts for active members only
+#         active_emails = [m.email for m in active_members]
+#         assignment_counts = (
+#             session.query(
+#                 FtaAssignments.assigned_to,
+#                 func.count(FtaAssignments.id).label('count')
+#             )
+#             .filter(FtaAssignments.assigned_to.in_(active_emails))
+#             .group_by(FtaAssignments.assigned_to)
+#             .all()
+#         )
         
-        # Create count dictionary
-        counts = {email: 0 for email in active_emails}
-        for email, count in assignment_counts:
-            counts[email] = count
+#         # Create count dictionary
+#         counts = {email: 0 for email in active_emails}
+#         for email, count in assignment_counts:
+#             counts[email] = count
         
-        # Sort members by current assignment count (least assigned first)
-        sorted_members = sorted(counts.items(), key=lambda x: x[1])
+#         # Sort members by current assignment count (least assigned first)
+#         sorted_members = sorted(counts.items(), key=lambda x: x[1])
         
-        # Distribute FTAs
-        assignments = {}
-        member_index = 0
+#         # Distribute FTAs
+#         assignments = {}
+#         member_index = 0
         
-        for fta in fta_list:
-            assigned_email = sorted_members[member_index][0]
-            assignments[fta['id']] = assigned_email
+#         for fta in fta_list:
+#             assigned_email = sorted_members[member_index][0]
+#             assignments[fta['id']] = assigned_email
             
-            # Update count for next iteration
-            sorted_members[member_index] = (assigned_email, sorted_members[member_index][1] + 1)
-            sorted_members.sort(key=lambda x: x[1])  # Re-sort after increment
+#             # Update count for next iteration
+#             sorted_members[member_index] = (assigned_email, sorted_members[member_index][1] + 1)
+#             sorted_members.sort(key=lambda x: x[1])  # Re-sort after increment
             
-            # Move to next member (round-robin style)
-            member_index = (member_index + 1) % len(sorted_members)
+#             # Move to next member (round-robin style)
+#             member_index = (member_index + 1) % len(sorted_members)
         
-        return assignments
+#         return assignments
 
 # Example usage in your assignment workflow:
-def process_fta_assignments(uploaded_ftas):
-    """
-    Process FTA assignments - only assigns to active members
-    """
-    try:
-        assignments = assign_ftas_to_active_members(uploaded_ftas)
+# def process_fta_assignments(uploaded_ftas):
+#     """
+#     Process FTA assignments - only assigns to active members
+#     """
+#     try:
+#         assignments = assign_ftas_to_active_members(uploaded_ftas)
         
-        with get_session() as session:
-            for fta_id, email in assignments.items():
-                assignment = FtaAssignments(
-                    fta_id=fta_id,
-                    assigned_to=email,
-                    assigned_at=datetime.now()
-                    # ... other fields
-                )
-                session.add(assignment)
-            session.commit()
+#         with get_session() as session:
+#             for fta_id, email in assignments.items():
+#                 assignment = FtaAssignments(
+#                     fta_id=fta_id,
+#                     assigned_to=email,
+#                     assigned_at=datetime.now()
+#                     # ... other fields
+#                 )
+#                 session.add(assignment)
+#             session.commit()
         
-        return True, f"Successfully assigned {len(assignments)} FTAs to active members"
+#         return True, f"Successfully assigned {len(assignments)} FTAs to active members"
     
-    except ValueError as e:
-        return False, str(e)
-    except Exception as e:
-        return False, f"Assignment failed: {str(e)}"
+#     except ValueError as e:
+#         return False, str(e)
+#     except Exception as e:
+#         return False, f"Assignment failed: {str(e)}"
